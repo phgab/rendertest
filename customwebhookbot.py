@@ -14,6 +14,7 @@ You may also need to change the `listen` value in the uvicorn configuration to m
 Press Ctrl-C on the command line or send a signal to the process to stop the bot.
 """
 import asyncio
+import os
 import html
 import logging
 from dataclasses import dataclass
@@ -58,6 +59,10 @@ logging.basicConfig(
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
+
+API_TOKEN = os.environ['TELE_BOT']
+WEBHOOK_HOST = os.environ['TELE_BOT_URL']
+ADMIN_ID = os.environ['ADMINCHAT']
 
 
 @dataclass
@@ -113,15 +118,15 @@ async def webhook_update(update: WebhookUpdate, context: CustomContext) -> None:
 
 async def main() -> None:
     """Set up the application and a custom webserver."""
-    url = "https://domain.tld"
-    admin_chat_id = 123456
+    url = WEBHOOK_HOST
+    admin_chat_id = ADMIN_ID
     port = 8000
 
     context_types = ContextTypes(context=CustomContext)
     # Here we set updater to None because we want our custom webhook server to handle the updates
     # and hence we don't need an Updater instance
     application = (
-        Application.builder().token("TOKEN").updater(None).context_types(context_types).build()
+        Application.builder().token("API_TOKEN").updater(None).context_types(context_types).build()
     )
     # save the values in `bot_data` such that we may easily access them in the callbacks
     application.bot_data["url"] = url

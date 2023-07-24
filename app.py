@@ -13,6 +13,9 @@ import telebot
 #new
 import logging
 from telegram.ext import Updater
+from convHandlerBike import getConvHandlerBike
+from convHandlerWeather import getConvHandlerWeather
+from stdBotCommands import addBotCommands
 
 API_TOKEN = os.environ['TELE_BOT']
 WEBHOOK_HOST = os.environ['TELE_BOT_URL']
@@ -24,7 +27,15 @@ WEBHOOK_URL_BASE = "{0}/{1}".format(WEBHOOK_HOST, WEBHOOK_SECRET)
 
 tornado.options.define("port", default=WEBHOOK_PORT, help="run on the given port", type=int)
 
-bot = telebot.TeleBot(API_TOKEN)
+# bot = telebot.TeleBot(API_TOKEN)
+# new start
+# Enable logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+
+logger = logging.getLogger(__name__)
+updater = Updater(API_TOKEN, use_context=True)
+#new end
 
 class BaseHandler(tornado.web.RequestHandler):
     """
@@ -102,9 +113,31 @@ def vocab_def(message):
 
 
 def make_app():
-    bot.remove_webhook()
-    print(WEBHOOK_URL_BASE)
-    bot.set_webhook(url=WEBHOOK_URL_BASE)
+    # bot.remove_webhook()
+    # print(WEBHOOK_URL_BASE)
+    # bot.set_webhook(url=WEBHOOK_URL_BASE)
+
+    # new start
+    # Get the dispatcher to register handlers
+    dp = updater.dispatcher
+
+    # Conversation handlers
+    dp.add_handler(getConvHandlerWeather())
+
+    dp.add_handler(getConvHandlerBike())
+
+    # Standard commands
+    dp = addBotCommands(dp, logger)
+
+    # Start the Bot
+    updater.start_webhook(listen="0.0.0.0",
+                          port=int(WEBHOOK_PORT),
+                          url_path=API_TOKEN)
+    updater.bot.setWebhook(WEBHOOK_URL_BASE + API_TOKEN)
+
+    updater.bot.sendMessage(532298931, "Bot running")
+    # new end
+
     #signal.signal(signal.SIGINT, signal_handler)
     settings = dict(
         cookie_secret=str(os.urandom(45)),

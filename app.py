@@ -87,29 +87,29 @@ class WebhookServ(BaseHandler):
             self.finish()
 
 
-# Handle '/start' and '/help'
-@bot.message_handler(commands=['help', 'start'])
-def send_welcome(message):
-    bot.reply_to(message,
-                 ("Hi there, I am EchoBot.\n"
-                  "I am here to echo your kind words back to you."))
-
-@bot.message_handler(commands=['greet'])
-def greet(message):
-    bot.send_message(message.chat.id, "Hey how's it going?")
-
-
-def dict_definition(message):
-    request = message.text.split()
-    if len(request) < 2: #or request[0].lower() not in "price":
-        return False
-    else:
-        return True
-
-@bot.message_handler(func=dict_definition)
-def vocab_def(message):
-    print(f"message: {message}")
-    bot.send_message(message.chat.id, f"message: {message.text}")
+# # Handle '/start' and '/help'
+# @bot.message_handler(commands=['help', 'start'])
+# def send_welcome(message):
+#     bot.reply_to(message,
+#                  ("Hi there, I am EchoBot.\n"
+#                   "I am here to echo your kind words back to you."))
+#
+# @bot.message_handler(commands=['greet'])
+# def greet(message):
+#     bot.send_message(message.chat.id, "Hey how's it going?")
+#
+#
+# def dict_definition(message):
+#     request = message.text.split()
+#     if len(request) < 2: #or request[0].lower() not in "price":
+#         return False
+#     else:
+#         return True
+#
+# @bot.message_handler(func=dict_definition)
+# def vocab_def(message):
+#     print(f"message: {message}")
+#     bot.send_message(message.chat.id, f"message: {message.text}")
 
 
 def make_app():

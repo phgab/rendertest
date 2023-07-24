@@ -10,6 +10,10 @@ import tornado.web
 
 import telebot
 
+#new
+import logging
+from telegram.ext import Updater
+
 API_TOKEN = os.environ['TELE_BOT']
 WEBHOOK_HOST = os.environ['TELE_BOT_URL']
 WEBHOOK_SECRET = "setwebhook"

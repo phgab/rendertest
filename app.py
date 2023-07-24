@@ -136,6 +136,7 @@ def make_app():
     updater.bot.setWebhook(WEBHOOK_URL_BASE + API_TOKEN)
 
     updater.bot.sendMessage(532298931, "Bot running")
+    updater.idle()
     # new end
 
     #signal.signal(signal.SIGINT, signal_handler)

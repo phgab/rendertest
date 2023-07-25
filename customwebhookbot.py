@@ -51,6 +51,10 @@ from telegram.ext import (
     TypeHandler,
 )
 
+from convHandlerBike import getConvHandlerBike
+from convHandlerWeather import getConvHandlerWeather
+from stdBotCommands import addBotCommands
+
 # Enable logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -136,6 +140,10 @@ async def main() -> None:
     application.add_handler(CommandHandler("start", start))
     application.add_handler(TypeHandler(type=WebhookUpdate, callback=webhook_update))
 
+    # Conversation handlers
+    application.add_handler(getConvHandlerWeather())
+    application.add_handler(getConvHandlerBike())
+
     # Pass webhook settings to telegram
     await application.bot.set_webhook(url=f"{url}/telegram", allowed_updates=Update.ALL_TYPES)
 
@@ -195,7 +203,7 @@ async def main() -> None:
         await application.start()
         await webserver.serve()
         await application.stop()
-
+    application.bot.sendMessage(532298931, "Bot running")
 
 if __name__ == "__main__":
     asyncio.run(main())

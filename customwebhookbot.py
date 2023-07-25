@@ -201,7 +201,7 @@ async def main() -> None:
         )
     )
 
-    # application.bot.sendMessage(532298931, "Bot running")
+    await application.bot.sendMessage(admin_chat_id, "Bot running")
 
     # Run application and webserver together
     async with application:

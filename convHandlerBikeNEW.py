@@ -14,33 +14,34 @@ async def bikeStart(update, context):
     return 1
 
 
-def bikeEval(update, context):
+async def bikeEval(update, context):
     query = update.callback_query
-    query.answer()
-    bot = query.bot
+    await query.answer()
+    # bot = query.bot
+    bot = context.bot
     qData = query.data
     adID = int(qData)
     if adID == 1:
-        address = 'Kriegerstrasse 22, 30161 Hannover'
+        address = 'Slicherstr 6, 30163 Hannover'
     elif adID == 2:
         address = 'Stadtfelddamm 34, 30625 Hannover'
 
     returnStr, fileName, errorCode = returnMinutely({"address": address})
 
     if errorCode == -2:
-        bot.sendMessage(query.message.chat.id, "Keine Adresse übermittelt")
+        await bot.sendMessage(query.message.chat.id, "Keine Adresse übermittelt")
     elif errorCode == -1:
-        bot.sendMessage(query.message.chat.id, "Adresse konnte nicht gefunden werden")
+        await bot.sendMessage(query.message.chat.id, "Adresse konnte nicht gefunden werden")
     else:
-        bot.send_photo(query.message.chat.id, open(fileName + ".jpg", 'rb'))
-        bot.sendMessage(query.message.chat.id, returnStr)
+        await bot.send_photo(query.message.chat.id, open(fileName + ".jpg", 'rb'))
+        await bot.sendMessage(query.message.chat.id, returnStr)
     return ConversationHandler.END
 
 
-def cancel(update, context):
+async def cancel(update, context):
     #user = update.message.from_user
     #logger.info("User %s canceled the conversation." % user.first_name)
-    update.message.reply_text('Okay dann halt nicht -.-')
+    await update.message.reply_text('Okay dann halt nicht -.-')
 
     return ConversationHandler.END
 

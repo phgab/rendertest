@@ -52,7 +52,7 @@ from telegram.ext import (
 )
 
 from convHandlerBike import getConvHandlerBike
-from convHandlerWeather import getConvHandlerWeather
+from convHandlerWeatherNEW import getConvHandlerWeather
 from stdBotCommands import addBotCommands
 
 # Enable logging

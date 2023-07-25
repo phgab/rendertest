@@ -144,6 +144,9 @@ async def main() -> None:
     application.add_handler(getConvHandlerWeather())
     application.add_handler(getConvHandlerBike())
 
+    # Standard commands
+    application = addBotCommands(application, logger)
+
     # Pass webhook settings to telegram
     await application.bot.set_webhook(url=f"{url}/telegram", allowed_updates=Update.ALL_TYPES)
 

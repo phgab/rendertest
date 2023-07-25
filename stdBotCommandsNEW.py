@@ -16,7 +16,7 @@ def addBotCommands(dp, log):
     dp.add_handler(CommandHandler("sendPickle", sendPickle))
 
     # on noncommand i.e message - echo the message on Telegram
-    dp.add_handler(MessageHandler(filters.text, echo))
+    dp.add_handler(MessageHandler(filters.TEXT, echo))
 
     # log all errors
     dp.add_error_handler(error)

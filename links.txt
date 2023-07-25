@@ -1,0 +1,10 @@
+
+#ideas
+https://github.com/jossalgon/StableDiffusionTelegram
+https://dicksonneoh.com/portfolio/deploy_gpt_hf_models_on_telegram/
+
+#done
+https://swiftuser.hashnode.dev/how-to-telegram-bot-with-python
+
+https://docs.python-telegram-bot.org/en/stable/examples.customwebhookbot.html
+

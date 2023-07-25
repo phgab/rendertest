@@ -13,6 +13,10 @@ Set bot token, url, admin chat_id and port at the start of the `main` function.
 You may also need to change the `listen` value in the uvicorn configuration to match your setup.
 Press Ctrl-C on the command line or send a signal to the process to stop the bot.
 """
+
+#TODO: add wakey wakey via cron job
+# add chatgpt api
+
 import asyncio
 import os
 import html
@@ -54,6 +58,7 @@ from telegram.ext import (
 from convHandlerBikeNEW import getConvHandlerBike
 from convHandlerWeatherNEW import getConvHandlerWeather
 from stdBotCommandsNEW import addBotCommands
+from weatherFuncts import returnMinutely, returnMinutelyHourly
 
 # Enable logging
 logging.basicConfig(
@@ -180,6 +185,40 @@ async def main() -> None:
         await application.update_queue.put(WebhookUpdate(user_id=user_id, payload=payload))
         return PlainTextResponse("Thank you for the submission! It's being forwarded.")
 
+    async def activateReminder(request: Request) -> PlainTextResponse:
+        """
+        Handle incoming webhook updates by also putting them into the `update_queue` if
+        the required parameters were passed correctly.
+        """
+        try:
+            chat_id = int(request.query_params["chat_id"])
+            reminderType = request.query_params["reminderType"]
+            address = request.query_params["address"]
+            city = request.query_params["city"]
+        except KeyError:
+            return PlainTextResponse(
+                status_code=HTTPStatus.BAD_REQUEST,
+                content="Please pass both `user_id` and `payload` as query parameters.",
+            )
+        except ValueError:
+            return PlainTextResponse(
+                status_code=HTTPStatus.BAD_REQUEST,
+                content="The `user_id` must be a string!",
+            )
+        bot = application.bot
+        if reminderType == "rain":
+            returnStr, fileName, errorCode = returnMinutely({"address": address + ", " + city})
+            await bot.sendPhoto(chat_id, open(fileName + ".jpg", 'rb'))
+            await bot.sendMessage(chat_id, returnStr)
+        else:
+            returnStr, [fileNameMin, fileNameHrl], errorCode = returnMinutelyHourly({"address": address + ", " + city})
+
+            await bot.sendPhoto(chat_id, open(fileNameHrl + ".jpg", 'rb'))
+            await bot.sendPhoto(chat_id, open(fileNameMin + ".jpg", 'rb'))
+            await bot.sendMessage(chat_id, returnStr)
+        # await application.update_queue.put(WebhookUpdate(user_id=user_id, payload=payload))
+        return PlainTextResponse("Thank you for the submission! It's being forwarded.")
+
     async def health(_: Request) -> PlainTextResponse:
         """For the health endpoint, reply with a simple plain text message."""
         return PlainTextResponse(content="The bot is still running fine :)")
@@ -189,6 +228,7 @@ async def main() -> None:
             Route("/telegram", telegram, methods=["POST"]),
             Route("/healthcheck", health, methods=["GET"]),
             Route("/submitpayload", custom_updates, methods=["POST", "GET"]),
+            Route("/activatereminder", activateReminder, methods=["POST", "GET"]),
         ]
     )
     webserver = uvicorn.Server(

@@ -193,7 +193,8 @@ async def main() -> None:
         try:
             chat_id = int(request.query_params["chat_id"])
             reminderType = request.query_params["reminderType"]
-            address = request.query_params["address"]
+            road = request.query_params["road"]
+            housenr = request.query_params["houseno"]
             city = request.query_params["city"]
         except KeyError:
             return PlainTextResponse(
@@ -207,11 +208,11 @@ async def main() -> None:
             )
         bot = application.bot
         if reminderType == "rain":
-            returnStr, fileName, errorCode = returnMinutely({"address": address + ", " + city})
+            returnStr, fileName, errorCode = returnMinutely({"address": road + " " + housenr + ", " + city})
             await bot.sendPhoto(chat_id, open(fileName + ".jpg", 'rb'))
             await bot.sendMessage(chat_id, returnStr)
         else:
-            returnStr, [fileNameMin, fileNameHrl], errorCode = returnMinutelyHourly({"address": address + ", " + city})
+            returnStr, [fileNameMin, fileNameHrl], errorCode = returnMinutelyHourly({"address": road + " " + housenr + ", " + city})
 
             await bot.sendPhoto(chat_id, open(fileNameHrl + ".jpg", 'rb'))
             await bot.sendPhoto(chat_id, open(fileNameMin + ".jpg", 'rb'))

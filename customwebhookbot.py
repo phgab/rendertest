@@ -51,7 +51,7 @@ from telegram.ext import (
     TypeHandler,
 )
 
-from convHandlerBike import getConvHandlerBike
+from convHandlerBikeNEW import getConvHandlerBike
 from convHandlerWeatherNEW import getConvHandlerWeather
 from stdBotCommandsNEW import addBotCommands
 

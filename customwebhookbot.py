@@ -185,7 +185,8 @@ async def main() -> None:
             app=starlette_app,
             port=port,
             use_colors=False,
-            host="127.0.0.1",
+            # host="127.0.0.1",
+            host="0.0.0.0",
         )
     )
 

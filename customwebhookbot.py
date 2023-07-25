@@ -137,7 +137,7 @@ async def main() -> None:
     application.bot_data["admin_chat_id"] = admin_chat_id
 
     # register handlers
-    application.add_handler(CommandHandler("start", start))
+    # application.add_handler(CommandHandler("start", start))
     application.add_handler(TypeHandler(type=WebhookUpdate, callback=webhook_update))
 
     # Conversation handlers

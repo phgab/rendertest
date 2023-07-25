@@ -198,12 +198,14 @@ async def main() -> None:
         )
     )
 
+    application.bot.sendMessage(532298931, "Bot running")
+
     # Run application and webserver together
     async with application:
         await application.start()
         await webserver.serve()
         await application.stop()
-    application.bot.sendMessage(532298931, "Bot running")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

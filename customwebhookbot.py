@@ -194,7 +194,7 @@ async def main() -> None:
             chat_id = int(request.query_params["chat_id"])
             reminderType = request.query_params["reminderType"]
             road = request.query_params["road"]
-            housenr = request.query_params["houseno"]
+            housenr = request.query_params["housenr"]
             city = request.query_params["city"]
         except KeyError:
             return PlainTextResponse(

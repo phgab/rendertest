@@ -72,8 +72,8 @@ def getPlace(coord):
 
 
 def findLatLon(address):
-    url = 'https://nominatim.openstreetmap.org/search/' + \
-          urllib.parse.quote(address) + '?format=json'
+    url = 'https://nominatim.openstreetmap.org/search?q=' + \
+          urllib.parse.quote(address) + '&format=json'
 
     response = requests.get(url).json()
     if "lat" in response[0]:
@@ -99,8 +99,8 @@ def findLatLon(address):
 def findLocCoord(coord):
     lat = coord["lat"]
     lon = coord["lon"]
-    url = 'https://nominatim.openstreetmap.org/search/' + \
-          urllib.parse.quote(str(lat)+","+str(lon)) + '?format=json'
+    url = 'https://nominatim.openstreetmap.org/search?q=' + \
+          urllib.parse.quote(str(lat)+","+str(lon)) + '&format=json'
 
     response = requests.get(url).json()
     if "lat" in response[0]:

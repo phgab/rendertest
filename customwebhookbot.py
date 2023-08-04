@@ -32,6 +32,9 @@ from starlette.routing import Route
 
 from telegram import __version__ as TG_VER
 
+from gbMongoDB import addTestUser
+from pymongo.errors import ConnectionFailure
+
 try:
     from telegram import __version_info__
 except ImportError:
@@ -155,6 +158,13 @@ async def main() -> None:
     # Pass webhook settings to telegram
     await application.bot.set_webhook(url=f"{url}/telegram", allowed_updates=Update.ALL_TYPES)
 
+    print('testing mongodb')
+    try:
+        addTestUser()
+    except ConnectionFailure:
+        print('test failed')
+    print('test successful')
+
     # Set up webserver
     async def telegram(request: Request) -> Response:
         """Handle incoming Telegram updates by putting them into the `update_queue`"""
@@ -211,7 +221,7 @@ async def main() -> None:
             returnStr, fileName, errorCode = returnMinutely({"address": road + " " + housenr + ", " + city})
             await bot.sendPhoto(chat_id, open(fileName + ".jpg", 'rb'))
             await bot.sendMessage(chat_id, returnStr)
-        else:
+        elif reminderType == "weather":
             returnStr, [fileNameMin, fileNameHrl], errorCode = returnMinutelyHourly({"address": road + " " + housenr + ", " + city})
 
             await bot.sendPhoto(chat_id, open(fileNameHrl + ".jpg", 'rb'))

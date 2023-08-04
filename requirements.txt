@@ -13,3 +13,5 @@ bs4
 
 starlette~=0.20.0 
 uvicorn~=0.17.0
+
+pymongo

@@ -32,9 +32,6 @@ from starlette.routing import Route
 
 from telegram import __version__ as TG_VER
 
-from gbMongoDB import addTestUser
-from pymongo.errors import ConnectionFailure
-
 try:
     from telegram import __version_info__
 except ImportError:
@@ -157,13 +154,6 @@ async def main() -> None:
 
     # Pass webhook settings to telegram
     await application.bot.set_webhook(url=f"{url}/telegram", allowed_updates=Update.ALL_TYPES)
-
-    print('testing mongodb')
-    try:
-        addTestUser()
-    except ConnectionFailure:
-        print('test failed')
-    print('test successful')
 
     # Set up webserver
     async def telegram(request: Request) -> Response:

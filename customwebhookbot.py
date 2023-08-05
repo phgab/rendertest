@@ -165,7 +165,8 @@ async def main() -> None:
         await application.update_queue.put(
             Update.de_json(data=await request.json(), bot=application.bot)
         )
-        for item in request.json():
+        test = await request.json()
+        for item in test:
             print(item)
         return Response()
 

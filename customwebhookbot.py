@@ -165,7 +165,8 @@ async def main() -> None:
         await application.update_queue.put(
             Update.de_json(data=await request.json(), bot=application.bot)
         )
-        print(json.dumps(request.json(), indent=2))
+        for item in request.json():
+            print(item)
         return Response()
 
     async def custom_updates(request: Request) -> PlainTextResponse:

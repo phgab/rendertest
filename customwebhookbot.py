@@ -24,6 +24,7 @@ import logging
 from dataclasses import dataclass
 from http import HTTPStatus
 import json
+import pprint
 
 import uvicorn
 from starlette.applications import Starlette
@@ -167,10 +168,14 @@ async def main() -> None:
         )
         # check if actUserDate requires an update for the curent runtime
         data = await request.json()
-        for item in data['message']:
-            print(item)
-            for subitem in data['message'][item]:
-                print(subitem)
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(data['message'])
+        pp.pprint(data['message']['from'])
+        pp.pprint(data['message']['chat'])
+        # for item in data['message'].keys():
+        #     print(item)
+        #     for subitem in data['message'][item].keys():
+        #         print(subitem)
         # chatId = data['message']['chat_id']
         # if chatId not in actUserData:
 

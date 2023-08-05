@@ -169,7 +169,7 @@ async def main() -> None:
         data = await request.json()
         for item in data['message']:
             print(item)
-            for subitem in item:
+            for subitem in data['message'][item]:
                 print(subitem)
         # chatId = data['message']['chat_id']
         # if chatId not in actUserData:

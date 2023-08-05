@@ -165,9 +165,15 @@ async def main() -> None:
         await application.update_queue.put(
             Update.de_json(data=await request.json(), bot=application.bot)
         )
-        test = await request.json()
-        for item in test['message']:
+        # check if actUserDate requires an update for the curent runtime
+        data = await request.json()
+        for item in data['message']:
             print(item)
+            for subitem in item:
+                print(subitem)
+        # chatId = data['message']['chat_id']
+        # if chatId not in actUserData:
+
         return Response()
 
     async def custom_updates(request: Request) -> PlainTextResponse:

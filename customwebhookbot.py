@@ -166,7 +166,7 @@ async def main() -> None:
             Update.de_json(data=await request.json(), bot=application.bot)
         )
         test = await request.json()
-        for item in test:
+        for item in test['message']:
             print(item)
         return Response()
 

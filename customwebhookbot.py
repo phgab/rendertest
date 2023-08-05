@@ -23,6 +23,7 @@ import html
 import logging
 from dataclasses import dataclass
 from http import HTTPStatus
+import json
 
 import uvicorn
 from starlette.applications import Starlette
@@ -164,7 +165,7 @@ async def main() -> None:
         await application.update_queue.put(
             Update.de_json(data=await request.json(), bot=application.bot)
         )
-        print(request.json())
+        print(json.dumps(request.json(), indent=2))
         return Response()
 
     async def custom_updates(request: Request) -> PlainTextResponse:

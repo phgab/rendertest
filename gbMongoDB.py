@@ -49,7 +49,7 @@ def getUserData(db, chatId):
 def createUserEntry(db, chatId, **dataEntries):
     userData = {'chatId': chatId}
     for entryName, entryData in dataEntries.items():
-        userData['entryName'] = entryData
+        userData[entryName] = entryData
     db.users.insert_one(userData)
 
 def updateUserEntry(db, chatId, **dataEntries):

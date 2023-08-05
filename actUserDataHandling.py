@@ -7,6 +7,6 @@ def AUD_addUserData(db, actUserData, chatId, **dataEntries):
     else:
         for dataKey, dataEntry in dataEntries.items():
             if dataKey not in userData or dataEntry != userData[dataKey]:
-                updateUserEntry(db, chatId, {dataKey: dataEntry})
+                updateUserEntry(db, chatId, **{dataKey: dataEntry})
     userDataNew = getUserData(db, chatId)
     return userDataNew

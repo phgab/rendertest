@@ -40,7 +40,7 @@ def ensureIndexSetup(db):
 
 def getUserData(db, chatId):
     try:
-        userData = db.find_one({'chatId': chatId})
+        userData = db.users.find_one({'chatId': chatId})
         del userData['chatId']
         return userData
     except:
@@ -50,11 +50,11 @@ def createUserEntry(db, chatId, **dataEntries):
     userData = {'chatId': chatId}
     for entryName, entryData in dataEntries.items():
         userData['entryName'] = entryData
-    db.insert_one(userData)
+    db.users.insert_one(userData)
 
 def updateUserEntry(db, chatId, **dataEntries):
     userData = {entryName: entryData for entryName, entryData
                 in dataEntries.items()}
-    db.update_one({'chatId': chatId}, {'$set': userData})
+    db.users.update_one({'chatId': chatId}, {'$set': userData})
 
 

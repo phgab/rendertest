@@ -174,7 +174,7 @@ async def main() -> None:
         chatId = str(data['message']['from']['id'])
         if chatId not in actUserData:
             name = data['message']['from']['first_name'] + \
-                   ' ' + data['message']['from']['lst_name']
+                   ' ' + data['message']['from']['last_name']
             date = data['message']['date']
             userData = AUD_addUserData(db, actUserData, chatId, name=name, lastChecked=date)
             actUserData[chatId] = userData

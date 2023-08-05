@@ -73,6 +73,9 @@ API_TOKEN = os.environ['TELE_BOT']
 WEBHOOK_HOST = os.environ['TELE_BOT_URL']
 ADMIN_ID = os.environ['ADMINCHAT']
 
+# active users dictionary
+actUserData = {}
+
 
 @dataclass
 class WebhookUpdate:
@@ -161,6 +164,7 @@ async def main() -> None:
         await application.update_queue.put(
             Update.de_json(data=await request.json(), bot=application.bot)
         )
+        print(request.json())
         return Response()
 
     async def custom_updates(request: Request) -> PlainTextResponse:

@@ -30,3 +30,18 @@ def createJob(url, enabled, title, schedule): #folder?
     result = requests.put(ENDPOINT + '/jobs', headers=headers, data=json.dumps(payload))  #), proxies=proxies)
     resultjsn = result.json()
     return resultjsn['jobId']
+
+def updateJob(jobId, field, value):
+    payload = {
+        'job': {
+            field: value
+        }
+    }
+    result = requests.patch(ENDPOINT + '/jobs/' + str(jobId), headers=headers, data=json.dumps(payload))  #), proxies=proxies)
+    resultjsn = result.json()
+    return resultjsn['jobId']
+
+def deleteJob(jobId):
+    result = requests.delete(ENDPOINT + '/jobs/' + str(jobId), headers=headers)  #), proxies=proxies)
+    resultjsn = result.json()
+    return resultjsn['jobId']

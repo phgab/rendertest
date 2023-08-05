@@ -61,6 +61,8 @@ from convHandlerBikeNEW import getConvHandlerBike
 from convHandlerWeatherNEW import getConvHandlerWeather
 from stdBotCommandsNEW import addBotCommands
 from weatherFuncts import returnMinutely, returnMinutelyHourly
+from gbMongoDB import getClientDB
+from actUserDataHandling import AUD_addUserData
 
 # Enable logging
 logging.basicConfig(
@@ -76,6 +78,7 @@ WEBHOOK_HOST = os.environ['TELE_BOT_URL']
 ADMIN_ID = os.environ['ADMINCHAT']
 
 # active users dictionary
+dbClient, db = getClientDB()
 actUserData = {}
 
 
@@ -168,17 +171,13 @@ async def main() -> None:
         )
         # check if actUserDate requires an update for the curent runtime
         data = await request.json()
-        pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(data['message'])
-        pp.pprint(data['message']['from'])
-        pp.pprint(data['message']['chat'])
-        # for item in data['message'].keys():
-        #     print(item)
-        #     for subitem in data['message'][item].keys():
-        #         print(subitem)
-        # chatId = data['message']['chat_id']
-        # if chatId not in actUserData:
-
+        chatId = str(data['message']['from']['id'])
+        if chatId not in actUserData:
+            name = data['message']['from']['first_name'] + \
+                   ' ' + data['message']['from']['lst_name']
+            date = data['message']['date']
+            userData = AUD_addUserData(db, actUserData, chatId, name=name, lastChecked=date)
+            actUserData[chatId] = userData
         return Response()
 
     async def custom_updates(request: Request) -> PlainTextResponse:

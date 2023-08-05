@@ -35,4 +35,20 @@ def ensureIndexSetup(db):
     if 'chatID' not in currentIndices:
         db.users.create_index([("chatID", ASCENDING)], unique=True)
 
+def getUserData(db, chatId):
+    userData = db.find_one({'chatId': chatId})
+    del userData['chatId']
+    return userData
+
+def createUserEntry(db, chatId, **dataEntries):
+    userData = {'chatId': chatId}
+    for entryName, entryData in dataEntries.items():
+        userData['entryName'] = entryData
+    db.insert_one(userData)
+
+def updateUserEntry(db, chatId, **dataEntries):
+    userData = {entryName: entryData for entryName, entryData
+                in dataEntries.items()}
+    db.update_one({'chatId': chatId}, {'$set': userData})
+
 

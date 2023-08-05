@@ -39,9 +39,12 @@ def ensureIndexSetup(db):
         db.users.create_index([("chatID", ASCENDING)], unique=True)
 
 def getUserData(db, chatId):
-    userData = db.find_one({'chatId': chatId})
-    del userData['chatId']
-    return userData
+    try:
+        userData = db.find_one({'chatId': chatId})
+        del userData['chatId']
+        return userData
+    except:
+        return []
 
 def createUserEntry(db, chatId, **dataEntries):
     userData = {'chatId': chatId}

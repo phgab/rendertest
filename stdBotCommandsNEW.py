@@ -24,7 +24,7 @@ def addBotCommands(dp, log):
     return dp
 
 
-def sendPickle(update, context):
+async def sendPickle(update, context):
     if os.path.isfile("weatherData"):
         bot = context.bot
         bot.send_document(update.message.chat.id, open("weatherData", 'rb'))
@@ -38,9 +38,9 @@ async def echo(update, context):
     await update.message.reply_text(update.message.text)
 
 
-async def error(update, context):
+def error(update, context):
     """Log Errors caused by Updates."""
-    await logger.warning('Update "%s" caused error "%s"', update, context.error)
+    logger.warning('Update "%s" caused error "%s"', update, context.error)
 
 
 async def time(update, context):

@@ -27,10 +27,10 @@ def addBotCommands(dp, log):
 async def sendPickle(update, context):
     if os.path.isfile("weatherData"):
         bot = context.bot
-        await bot.send_document(update.message.chat.id, open("weatherData", 'rb'))
-        await update.message.reply_text("There you go")
+        bot.send_document(update.message.chat.id, open("weatherData", 'rb'))
+        update.message.reply_text("There you go")
     else:
-        await update.message.reply_text("No file saved")
+        update.message.reply_text("No file saved")
 
 
 async def echo(update, context):

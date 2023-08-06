@@ -24,7 +24,7 @@ def addBotCommands(dp, log):
     return dp
 
 
-async def sendPickle(update, context):
+def sendPickle(update, context):
     if os.path.isfile("weatherData"):
         bot = context.bot
         bot.send_document(update.message.chat.id, open("weatherData", 'rb'))

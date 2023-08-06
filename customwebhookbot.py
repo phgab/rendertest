@@ -171,13 +171,14 @@ async def main() -> None:
         )
         # check if actUserDate requires an update for the curent runtime
         data = await request.json()
-        chatId = str(data['message']['from']['id'])
-        if chatId not in actUserData:
-            name = data['message']['from']['first_name'] + \
-                   ' ' + data['message']['from']['last_name']
-            date = data['message']['date']
-            userData = AUD_addUserData(db, actUserData, chatId, name=name, lastChecked=date)
-            actUserData[chatId] = userData
+        if 'message' in data:
+            chatId = str(data['message']['from']['id'])
+            if chatId not in actUserData:
+                name = data['message']['from']['first_name'] + \
+                       ' ' + data['message']['from']['last_name']
+                date = data['message']['date']
+                userData = AUD_addUserData(db, actUserData, chatId, name=name, lastChecked=date)
+                actUserData[chatId] = userData
         return Response()
 
     async def custom_updates(request: Request) -> PlainTextResponse:

@@ -1,40 +1,103 @@
 import asyncio
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, MessageHandler, filters, CallbackQueryHandler, ConversationHandler
-from weatherFuncts import returnMinutelyHourly
+from actUserDataHandling import getUserData
 
 FIRST, SECOND, THIRD = range(3)
-ENTERLOC, FIXEDLOC, USERLOC = range(3)
-fixedAdr = [["Slicherstr 6", ", 30163 Hannover"],
-            ["Stadtfelddamm 34", ", 30625 Hannover"],
-            ["Wiedenthaler Sand 9", ", 21147 Hamburg"],
-            ["An der Hasenkuhle 7", ", 21224 Rosengarten"]]
+L1, L2, L3 = range(3)
+CA, CB, CC, BACK = range(4)
 
-def getConvHandlerWeather():
-    convHandlerWeather = ConversationHandler(
-        entry_points=[CommandHandler("wetter", weatherLocChoice)],
+# 1. a. Fahrradadressen bearbeiten, b. Wettervorherasge-Adressen bearbeiten (jeweils Kurzname und Adresse eintragen)
+# 2. (jeweils): a. Adresse hinzufügen, b. Adressen bearbeiten, c. Adresse löschen
+# Bei a. und b. jeweils Feedback über die ermittelte Adresse
+
+def getConvHandlerSettings():
+    convHandlerSettings = ConversationHandler(
+        entry_points=[CommandHandler("einstellungen", settingsFirstLayer)],
         states={
-            FIRST: [CallbackQueryHandler(enterLoc, pattern='^' + str(ENTERLOC) + '$'),
-                    CallbackQueryHandler(fixedLoc, pattern='^' + str(FIXEDLOC) + '$'),
-                    CallbackQueryHandler(userLoc, pattern='^' + str(USERLOC) + '$')
-                ],
+            L1: [CallbackQueryHandler(settingsFirstLayer)],
+            L2: [CallbackQueryHandler(settingsSecondLayer_bike, pattern='^' + str(CA) + '$'),
+                 CallbackQueryHandler(settingsSecondLayer_weather, pattern='^' + str(CB) + '$')],
+            L3: [],
             SECOND: [MessageHandler(filters.LOCATION, readLoc),
                      MessageHandler(filters.TEXT, readAddress),
-                     CallbackQueryHandler(evalSelectedAddress)
-                ],
+                     CallbackQueryHandler(evalSelectedAddress)],
             },
         fallbacks=[CommandHandler('cancel', cancel)]
     )
-    return convHandlerWeather
+    return convHandlerSettings
 
-
-async def weatherLocChoice(update, context):
-    keyboard = [[InlineKeyboardButton("Adresse eingeben", callback_data=str(ENTERLOC))],
-                [InlineKeyboardButton("Auswahl", callback_data=str(FIXEDLOC))],
-                [InlineKeyboardButton("Eigener Standort", callback_data=str(USERLOC))]]
+async def settingsFirstLayer(update, context):
+    keyboard = [[InlineKeyboardButton("Fahrrad-Adressen bearbeiten", callback_data=str(CA))],
+                [InlineKeyboardButton("Wettervorhersage-Adressen bearbeiten", callback_data=str(CB))]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text('Bitte wählen:', reply_markup=reply_markup)
-    return FIRST
+    return L2
+
+def getSecondLayerKeyboard():
+    keyboard = [[InlineKeyboardButton("Adresse hinzufügen", callback_data=str(CA))],
+                [InlineKeyboardButton("Adressen bearbeiten", callback_data=str(CB))],
+                [InlineKeyboardButton("Adresse löschen", callback_data=str(CC))],
+                [InlineKeyboardButton("Zurück", callback_data=str(BACK))]]
+    return keyboard
+
+async def settingsSecondLayer_bike(update, context):
+    context.user_data['L1'] = 'bike'
+    keyboard = getSecondLayerKeyboard()
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text('Aktion für Fahrrad-Adressen wählen:', reply_markup=reply_markup)
+    return L3
+
+async def settingsSecondLayer_weather(update, context):
+    context.user_data['L1'] = 'weather'
+    keyboard = getSecondLayerKeyboard()
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text('Aktion für Wettervorhersage-Adressen wählen:', reply_markup=reply_markup)
+    return L3
+
+async def listUserAddresses(chatId):
+    t=0
+
+async def addAddress(update, context):
+    t=0
+
+async def addShortName(update, context):
+    t=0
+
+async def confirmAddition(update, context):
+    t=0
+
+async def selectAddress(update, context):
+    t=0
+    # change or delete from L2 context
+
+async def modifyAddress(update, context):
+    t=0
+
+async def modifyShortName(update, context):
+    t=0
+
+async def confirmModification(update, context):
+    t=0
+
+async def confirmDeletion(update, context):
+    t=0
+
+async def finalMessage(update, context):
+    t=0
+
+async def cancel(update, context):
+    t=0
+
+
+
+# async def weatherLocChoice(update, context):
+#     keyboard = [[InlineKeyboardButton("Adresse eingeben", callback_data=str(ENTERLOC))],
+#                 [InlineKeyboardButton("Auswahl", callback_data=str(FIXEDLOC))],
+#                 [InlineKeyboardButton("Eigener Standort", callback_data=str(USERLOC))]]
+#     reply_markup = InlineKeyboardMarkup(keyboard)
+#     await update.message.reply_text('Bitte wählen:', reply_markup=reply_markup)
+#     return FIRST
 
 
 async def enterLoc(update, context):
@@ -117,9 +180,9 @@ async def evalSelectedAddress(update, context):
         await bot.sendMessage(query.message.chat.id, returnStr)
     return ConversationHandler.END
 
-async def cancel(update, context):
-    #user = update.message.from_user
-    #logger.info("User %s canceled the conversation." % user.first_name)
-    await update.message.reply_text('Okay dann halt nicht -.-')
-
-    return ConversationHandler.END
+# async def cancel(update, context):
+#     #user = update.message.from_user
+#     #logger.info("User %s canceled the conversation." % user.first_name)
+#     await update.message.reply_text('Okay dann halt nicht -.-')
+#
+#     return ConversationHandler.END

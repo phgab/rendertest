@@ -262,7 +262,7 @@ async def confirmDeletion(update, context):
     keyboard = [[InlineKeyboardButton("Ja", callback_data=str(C3A))],
                 [InlineKeyboardButton("Nein", callback_data=str(C3B))]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    query = update.callback_query
+
     await query.answer()
     await query.edit_message_text(replyText, reply_markup=reply_markup)
 

@@ -50,7 +50,8 @@ def getSecondLayerKeyboard():
 
 async def settingsSecondLayer_bike(update, context):
     context.user_data['L1'] = 'bike'
-    addressData_all = listUserAddresses(str(update.message.chat.id))
+    chatId = getChatId(update, context)
+    addressData_all = await listUserAddresses(chatId)
     if 'bike' in addressData_all:
         addressData = addressData_all['bike']
     else:
@@ -63,7 +64,8 @@ async def settingsSecondLayer_bike(update, context):
 
 async def settingsSecondLayer_weather(update, context):
     context.user_data['L1'] = 'weather'
-    addressData_all = listUserAddresses(str(update.message.chat.id))
+    chatId = getChatId(update, context)
+    addressData_all = await listUserAddresses(chatId)
     if 'weather' in addressData_all:
         addressData = addressData_all['weather']
     else:
@@ -109,7 +111,7 @@ async def confirmAddition(update, context):
 
 async def saveNewAddress(update, context):
     globalDB_var = context.bot_data['globalDB_var']
-    chatId = str(update.message.chat.id)
+    chatId = getChatId(update, context)
     addressType = context.user_data['L1']
     oldAddressData = context.user_data['addresses']
     newAddressID = len(oldAddressData)
@@ -153,6 +155,15 @@ async def cancel(update, context):
 
     return ConversationHandler.END
 
+def getChatId(update, context):
+    chat_id = -1
+    if update.message is not None:
+        # from a text message
+        chat_id = str(update.message.chat.id)
+    elif update.callback_query is not None:
+        # from a callback message
+        chat_id = str(update.callback_query.message.chat.id)
+    return chat_id
 
 
 # async def weatherLocChoice(update, context):

@@ -144,7 +144,7 @@ def getSelectionKeyboard(update, context):
     addressData = context.user_data['addresses']
     keyboard = []
     for ctr, address in enumerate(addressData):
-        buttonText = '"' + addressData['shortName'] + '": ' + addressData['address']
+        buttonText = '"' + address['shortName'] + '": ' + address['address']
         buttonCallback = 'Field_' + str(ctr)
         keyboard.append([InlineKeyboardButton(buttonText, callback_data=buttonCallback)])
     return keyboard

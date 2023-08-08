@@ -51,7 +51,7 @@ def getSecondLayerKeyboard():
 async def settingsSecondLayer_bike(update, context):
     context.user_data['L1'] = 'bike'
     chatId = getChatId(update, context)
-    addressData_all = listUserAddresses(chatId)
+    addressData_all = await listUserAddresses(chatId)
     if 'bike' in addressData_all:
         addressData = addressData_all['bike']
     else:
@@ -65,7 +65,7 @@ async def settingsSecondLayer_bike(update, context):
 async def settingsSecondLayer_weather(update, context):
     context.user_data['L1'] = 'weather'
     chatId = getChatId(update, context)
-    addressData_all = listUserAddresses(chatId)
+    addressData_all = await listUserAddresses(chatId)
     if 'weather' in addressData_all:
         addressData = addressData_all['weather']
     else:

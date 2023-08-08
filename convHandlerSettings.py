@@ -2,10 +2,11 @@ import asyncio
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, MessageHandler, filters, CallbackQueryHandler, ConversationHandler
 from actUserDataHandling import loadSingleUserData, AUD_updateUserAddressData
+from weatherReader import findLatLon
 
 FIRST, SECOND, THIRD = range(3)
-L1, L2, L3, SELECT, ADD1, ADD2, ADD3, EDIT1, EDIT2 = range(9)
-C1A, C1B, C2A, C2B, C2C, BACK = range(6)
+L1, L2, L3, SELECT, ADD1, ADD2, ADD3, EDIT1, EDIT2, EDIT3, EDIT4, DEL1, DEL2 = range(12)
+C1A, C1B, C2A, C2B, C2C, C3A, C3B, C3C, BACK = range(9)
 
 # 1. a. Fahrradadressen bearbeiten, b. Wettervorherasge-Adressen bearbeiten (jeweils Kurzname und Adresse eintragen)
 # 2. (jeweils): a. Adresse hinzufügen, b. Adressen bearbeiten, c. Adresse löschen
@@ -23,12 +24,15 @@ def getConvHandlerSettings():
                  CallbackQueryHandler(selectAddressDelete, pattern='^' + str(C2C) + '$')],
             ADD1: [MessageHandler(filters.TEXT, addShortName)],
             ADD2: [MessageHandler(filters.TEXT, confirmAddition)],
-            ADD3: [CallbackQueryHandler(saveNewAddress, pattern='^' + str(C2A) + '$'),
-                   CallbackQueryHandler(addAddress, pattern='^' + str(C2B) + '$'),
-                   CallbackQueryHandler(cancel, pattern='^' + str(C2C) + '$')],
-            # SECOND: [MessageHandler(filters.LOCATION, readLoc),
-            #          MessageHandler(filters.TEXT, readAddress),
-            #          CallbackQueryHandler(evalSelectedAddress)],
+            ADD3: [CallbackQueryHandler(saveNewAddress, pattern='^' + str(C3A) + '$'),
+                   CallbackQueryHandler(addAddress, pattern='^' + str(C3B) + '$'),
+                   CallbackQueryHandler(cancel, pattern='^' + str(C3C) + '$')],
+            EDIT1: [CallbackQueryHandler(modifyAddress)],
+            EDIT2: [MessageHandler(filters.TEXT, modifyShortName)],
+            EDIT3: [MessageHandler(filters.TEXT, confirmModification)],
+            EDIT4: [CallbackQueryHandler(saveModifiedAddress, pattern='^' + str(C3A) + '$'),
+                    CallbackQueryHandler(modifyAddress, pattern='^' + str(C3B) + '$'), #todo:straighten out
+                    CallbackQueryHandler(cancel, pattern='^' + str(C3C) + '$')]
             },
         fallbacks=[CommandHandler('cancel', cancel)]
     )
@@ -110,12 +114,15 @@ async def confirmAddition(update, context):
     shortName = update.message.text
     context.user_data['newShortName'] = shortName
     address = context.user_data['newAddress']
+    coord = findLatLon(address)
+    context.user_data['coord'] = coord
 
-    keyboard = [[InlineKeyboardButton("Ja", callback_data=str(C2A))],
-                [InlineKeyboardButton("Neu eingeben", callback_data=str(C2B))],
-                [InlineKeyboardButton("Abbrechen", callback_data=str(C2C))]]
+    keyboard = [[InlineKeyboardButton("Ja", callback_data=str(C3A))],
+                [InlineKeyboardButton("Neu eingeben", callback_data=str(C3B))],
+                [InlineKeyboardButton("Abbrechen", callback_data=str(C3C))]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    replyText = 'Soll die Addresse "' + address + ' (' + shortName + ')" gespeichert werden?'
+    replyText = ('Addresse gefunden in ' + coord['place'] + '.\n' +
+                 'Soll die Addresse "' + address + ' (' + shortName + ')" gespeichert werden?')
     await update.message.reply_text(replyText, reply_markup=reply_markup)
     return ADD3
 
@@ -126,32 +133,126 @@ async def saveNewAddress(update, context):
     oldAddressData = context.user_data['addresses']
     address = context.user_data['newAddress']
     shortName = context.user_data['newShortName']
+    coord = context.user_data['newCoord']
 
     newAddressData = oldAddressData
-    newAddressData.append({'address': address, 'shortName': shortName})
+    newAddressData.append({'address': address, 'shortName': shortName, 'coord': coord})
     AUD_updateUserAddressData(globalDB_var, chatId, addressType, newAddressData)
     return ConversationHandler.END
 
-async def getSelectionKeyboard(update, context):
-    t=0
+def getSelectionKeyboard(update, context):
+    addressData = context.user_data['addresses']
+    keyboard = []
+    for ctr, address in enumerate(addressData):
+        buttonText = '"' + addressData['shortName'] + '": ' + addressData['address']
+        buttonCallback = 'Field_' + str(ctr)
+        keyboard.append([InlineKeyboardButton(buttonText, callback_data=buttonCallback)])
+    return keyboard
 
 async def selectAddressModify(update, context):
-    t=0
+    query = update.callback_query
+    await query.answer()
+
+    keyboard = getSelectionKeyboard(update, context)
+    if len(keyboard) == 0:
+        await query.edit_message_text(text="Hier sind noch keine Adressen eingetragen. Vorgang wird abgebrochen.")
+        return ConversationHandler.END
+    else:
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text('Adresse zum Bearbeiten wählen:', reply_markup=reply_markup)
+        return EDIT1
+
 
 async def selectAddressDelete(update, context):
-    t=0
+    query = update.callback_query
+    await query.answer()
+
+    keyboard = getSelectionKeyboard(update, context)
+    if len(keyboard) == 0:
+        await query.edit_message_text(text="Hier sind noch keine Adressen eingetragen. Vorgang wird abgebrochen.")
+        return ConversationHandler.END
+    else:
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text('Adresse zum Löschen wählen:', reply_markup=reply_markup)
+        return DEL1
 
 async def modifyAddress(update, context):
-    t=0
+    query = update.callback_query
+    qData = query.data
+    if 'Field_' in qData:
+        # if not: rerun from previous try
+        chosenIdx = int(qData.replace('Field_', ''))
+        context.user_data['chosenField'] = chosenIdx
+        chosenAddress = context.user_data['addresses'][chosenIdx]
+        context.user_data['oldAddress'] = chosenAddress['address']
+        context.user_data['oldShortName'] = chosenAddress['shortName']
+        context.user_data['oldCoord'] = chosenAddress['coord']
+    replyText = ('Gespeicherte Adresse: ' + context.user_data['oldAddress'] + '\n' +
+                 'Bitte die aktualisierte Adresse inkl. PLZ und Ort senden.')
+    await query.answer()
+    # switch_inline_query_current_chat ?
+    await query.edit_message_text(text=replyText)
+    return EDIT2
 
 async def modifyShortName(update, context):
-    t=0
+    address = update.message.text
+    context.user_data['newAddress'] = address
+    replyText = ('Gespeicherte Kurzbeschreibung: ' + context.user_data['oldShortName'] + '\n' +
+                 'Bitte die aktualisierte Kurzbeschreibung senden.')
+    await update.message.reply_text(text=replyText)
+    return EDIT3
 
 async def confirmModification(update, context):
-    t=0
+    shortName = update.message.text
+    context.user_data['newShortName'] = shortName
+    address = context.user_data['newAddress']
+    oldShortName = context.user_data['oldShortName']
+    oldAddress = context.user_data['oldAddress']
+    coord = findLatLon(address)
+    context.user_data['newCoord'] = coord
+
+    keyboard = [[InlineKeyboardButton("Ja", callback_data=str(C3A))],
+                [InlineKeyboardButton("Neu eingeben", callback_data=str(C3B))],
+                [InlineKeyboardButton("Abbrechen", callback_data=str(C3C))]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    replyText = ('Adresse gefunden in ' + coord['place'] + '.\n' +
+                 'Soll die Adresse \n"' + oldAddress + ' (' + oldShortName + ')" zu \n'
+                 + address + ' (' + shortName + ')" \ngeändert werden?')
+    await update.message.reply_text(replyText, reply_markup=reply_markup)
+    return EDIT4
+
+async def saveModifiedAddress(update, context):
+    globalDB_var = context.bot_data['globalDB_var']
+    chatId = getChatId(update, context)
+    chosenIdx = context.user_data['chosenIdx']
+    addressType = context.user_data['L1']
+    oldAddressData = context.user_data['addresses']
+    address = context.user_data['newAddress']
+    shortName = context.user_data['newShortName']
+    coord = context.user_data['newCoord']
+
+    newAddressData = oldAddressData
+    newAddressData[chosenIdx] = {'address': address, 'shortName': shortName, 'coord': coord}
+    AUD_updateUserAddressData(globalDB_var, chatId, addressType, newAddressData)
+    return ConversationHandler.END
 
 async def confirmDeletion(update, context):
-    t=0
+    query = update.callback_query
+    qData = query.data
+    chosenIdx = int(qData.replace('Field_', ''))
+    context.user_data['chosenField'] = chosenIdx
+    oldAddresses = context.user_data['addresses']
+    newAddresses = oldAddresses
+    del newAddresses[chosenIdx]
+    chosenAddress = context.user_data['addresses'][chosenIdx]
+    oldAddress = chosenAddress['address']
+    oldShortName = chosenAddress['shortName']
+    replyText = ('Soll die Adresse ' + context.user_data['oldAddress'] +
+                 ' wirklich gelöscht werden?')
+    await query.answer()
+    # switch_inline_query_current_chat ?
+    await query.edit_message_text(text=replyText)
+    return DEL2
 
 async def finalMessage(update, context):
     t=0

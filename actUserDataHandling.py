@@ -25,7 +25,14 @@ def AUD_addUserData(db, actUserData, chatId, **dataEntries):
 def AUD_updateUserAddressData(db, chatId, addressType, newDict):
     actUserDataStored = getUserDataPickle()
     userData = actUserDataStored[chatId]
-    userData['addresses'][addressType] = newDict
+    if 'addresses' in userData:
+        # if addressType in userData['addresses']:
+        #     userData['addresses'][addressType] = newDict
+        # else:
+        userData['addresses'][addressType] = newDict
+    else:
+        userData['addresses'] = {addressType: newDict}
+
     updateUserEntry(db, chatId, addresses=userData['addresses'])
     actUserDataNew = actUserDataStored
     actUserDataNew[chatId] = userData

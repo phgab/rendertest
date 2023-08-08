@@ -124,14 +124,11 @@ async def saveNewAddress(update, context):
     chatId = getChatId(update, context)
     addressType = context.user_data['L1']
     oldAddressData = context.user_data['addresses']
-    newAddressID = len(oldAddressData)
     address = context.user_data['newAddress']
     shortName = context.user_data['newShortName']
 
     newAddressData = oldAddressData
-    newAddressData[newAddressID]['address'] = address
-    newAddressData[newAddressID]['shortName'] = shortName
-
+    newAddressData.append({'address': address, 'shortName': shortName})
     AUD_updateUserAddressData(globalDB_var, chatId, addressType, newAddressData)
 
 async def getSelectionKeyboard(update, context):

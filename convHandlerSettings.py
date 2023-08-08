@@ -176,7 +176,7 @@ async def modifyAddress(update, context):
     if 'Field_' in qData:
         # if not: rerun from previous try
         chosenIdx = int(qData.replace('Field_', ''))
-        context.user_data['chosenField'] = chosenIdx
+        context.user_data['chosenIdx'] = chosenIdx
         chosenAddress = context.user_data['addresses'][chosenIdx]
         context.user_data['oldAddress'] = chosenAddress['address']
         context.user_data['oldShortName'] = chosenAddress['shortName']

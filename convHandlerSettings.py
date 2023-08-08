@@ -181,7 +181,7 @@ async def modifyAddress(update, context):
         context.user_data['oldAddress'] = chosenAddress['address']
         context.user_data['oldShortName'] = chosenAddress['shortName']
         context.user_data['oldCoord'] = chosenAddress['coord']
-    replyText = ('Gespeicherte Adresse: ' + context.user_data['oldAddress'] + '\n' +
+    replyText = ('Gespeicherte Adresse:\n' + context.user_data['oldAddress'] + '\n' +
                  'Bitte die aktualisierte Adresse inkl. PLZ und Ort senden.')
     await query.answer()
     # switch_inline_query_current_chat ?
@@ -191,7 +191,7 @@ async def modifyAddress(update, context):
 async def modifyShortName(update, context):
     address = update.message.text
     context.user_data['newAddress'] = address
-    replyText = ('Gespeicherte Kurzbeschreibung: ' + context.user_data['oldShortName'] + '\n' +
+    replyText = ('Gespeicherte Kurzbeschreibung:\n' + context.user_data['oldShortName'] + '\n' +
                  'Bitte die aktualisierte Kurzbeschreibung senden.')
     await update.message.reply_text(text=replyText)
     return EDIT3
@@ -256,8 +256,8 @@ async def confirmDeletion(update, context):
     chosenAddress = context.user_data['addresses'][chosenIdx]
     oldAddress = chosenAddress['address']
     oldShortName = chosenAddress['shortName']
-    replyText = ('Soll die Adresse "' + oldAddress + ' (' +
-                 oldShortName + ')" wirklich gelöscht werden?')
+    replyText = ('Soll die Adresse \n"' + oldAddress + ' (' +
+                 oldShortName + ')"\n wirklich gelöscht werden?')
 
     keyboard = [[InlineKeyboardButton("Ja", callback_data=str(C3A))],
                 [InlineKeyboardButton("Nein", callback_data=str(C3B))]]

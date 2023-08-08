@@ -100,9 +100,10 @@ async def addAddress(update, context):
 async def addShortName(update, context):
     address = update.message.text
     context.user_data['newAddress'] = address
-    query = update.callback_query
-    await query.answer()
-    await query.edit_message_text(text="Bitte eine Kurzbeschreibung für die Adresse " + address + " senden.")
+    # query = update.callback_query
+    # await query.answer()
+    # await query.edit_message_text(text="Bitte eine Kurzbeschreibung für die Adresse " + address + " senden.")
+    await update.message.reply_text(text="Bitte eine Kurzbeschreibung für die Adresse " + address + " senden.")
     return ADD2
 
 async def confirmAddition(update, context):

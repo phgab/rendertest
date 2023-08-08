@@ -32,7 +32,10 @@ def getConvHandlerSettings():
             EDIT3: [MessageHandler(filters.TEXT, confirmModification)],
             EDIT4: [CallbackQueryHandler(saveModifiedAddress, pattern='^' + str(C3A) + '$'),
                     CallbackQueryHandler(modifyAddress, pattern='^' + str(C3B) + '$'), #todo:straighten out
-                    CallbackQueryHandler(cancel, pattern='^' + str(C3C) + '$')]
+                    CallbackQueryHandler(cancel, pattern='^' + str(C3C) + '$')],
+            DEL1: [CallbackQueryHandler(confirmDeletion)],
+            DEL2: [CallbackQueryHandler(deleteAddress, pattern='^' + str(C3A) + '$'),
+                   CallbackQueryHandler(cancel, pattern='^' + str(C3B) + '$')]
             },
         fallbacks=[CommandHandler('cancel', cancel)]
     )
@@ -162,20 +165,6 @@ async def selectAddressModify(update, context):
         await query.edit_message_text('Adresse zum Bearbeiten wählen:', reply_markup=reply_markup)
         return EDIT1
 
-
-async def selectAddressDelete(update, context):
-    query = update.callback_query
-    await query.answer()
-
-    keyboard = getSelectionKeyboard(update, context)
-    if len(keyboard) == 0:
-        await query.edit_message_text(text="Hier sind noch keine Adressen eingetragen. Vorgang wird abgebrochen.")
-        return ConversationHandler.END
-    else:
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.edit_message_text('Adresse zum Löschen wählen:', reply_markup=reply_markup)
-        return DEL1
-
 async def modifyAddress(update, context):
     query = update.callback_query
     qData = query.data
@@ -236,26 +225,48 @@ async def saveModifiedAddress(update, context):
     AUD_updateUserAddressData(globalDB_var, chatId, addressType, newAddressData)
     return ConversationHandler.END
 
+async def selectAddressDelete(update, context):
+    query = update.callback_query
+    await query.answer()
+
+    keyboard = getSelectionKeyboard(update, context)
+    if len(keyboard) == 0:
+        await query.edit_message_text(text="Hier sind noch keine Adressen eingetragen. Vorgang wird abgebrochen.")
+        return ConversationHandler.END
+    else:
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text('Adresse zum Löschen wählen:', reply_markup=reply_markup)
+        return DEL1
+
 async def confirmDeletion(update, context):
     query = update.callback_query
     qData = query.data
     chosenIdx = int(qData.replace('Field_', ''))
     context.user_data['chosenField'] = chosenIdx
-    oldAddresses = context.user_data['addresses']
-    newAddresses = oldAddresses
-    del newAddresses[chosenIdx]
     chosenAddress = context.user_data['addresses'][chosenIdx]
     oldAddress = chosenAddress['address']
     oldShortName = chosenAddress['shortName']
-    replyText = ('Soll die Adresse ' + context.user_data['oldAddress'] +
-                 ' wirklich gelöscht werden?')
-    await query.answer()
-    # switch_inline_query_current_chat ?
-    await query.edit_message_text(text=replyText)
+    replyText = ('Soll die Adresse "' + oldAddress + ' (' +
+                 oldShortName + ')" wirklich gelöscht werden?')
+
+    keyboard = [[InlineKeyboardButton("Ja", callback_data=str(C3A))],
+                [InlineKeyboardButton("Nein", callback_data=str(C3B))]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(replyText, reply_markup=reply_markup)
+
     return DEL2
 
-async def finalMessage(update, context):
-    t=0
+async def deleteAddress(update, context):
+    globalDB_var = context.bot_data['globalDB_var']
+    chatId = getChatId(update, context)
+    addressType = context.user_data['L1']
+
+    chosenIdx = context.user_data['chosenField']
+    oldAddressData = context.user_data['addresses']
+    newAddressData = oldAddressData
+    del newAddressData[chosenIdx]
+    AUD_updateUserAddressData(globalDB_var, chatId, addressType, newAddressData)
+    return ConversationHandler.END
 
 async def cancel(update, context):
     # user = update.message.from_user

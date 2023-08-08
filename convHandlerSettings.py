@@ -141,6 +141,11 @@ async def saveNewAddress(update, context):
     newAddressData = oldAddressData
     newAddressData.append({'address': address, 'shortName': shortName, 'coord': coord})
     AUD_updateUserAddressData(globalDB_var, chatId, addressType, newAddressData)
+
+    query = update.callback_query
+    await query.answer()
+    await query.edit_message_text(text="Hinzufügen erfolgreich.")
+
     return ConversationHandler.END
 
 def getSelectionKeyboard(update, context):
@@ -223,6 +228,11 @@ async def saveModifiedAddress(update, context):
     newAddressData = oldAddressData
     newAddressData[chosenIdx] = {'address': address, 'shortName': shortName, 'coord': coord}
     AUD_updateUserAddressData(globalDB_var, chatId, addressType, newAddressData)
+
+    query = update.callback_query
+    await query.answer()
+    await query.edit_message_text(text="Bearbeitung erfolgreich.")
+
     return ConversationHandler.END
 
 async def selectAddressDelete(update, context):
@@ -266,6 +276,11 @@ async def deleteAddress(update, context):
     newAddressData = oldAddressData
     del newAddressData[chosenIdx]
     AUD_updateUserAddressData(globalDB_var, chatId, addressType, newAddressData)
+
+    query = update.callback_query
+    await query.answer()
+    await query.edit_message_text(text="Löschung erfolgreich.")
+
     return ConversationHandler.END
 
 async def cancel(update, context):

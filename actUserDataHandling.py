@@ -22,6 +22,15 @@ def AUD_addUserData(db, actUserData, chatId, **dataEntries):
     saveUserDataPickle(actUserData)
     return actUserData
 
+def AUD_updateUserAddressData(db, chatId, addressType, newDict):
+    actUserDataStored = getUserDataPickle()
+    userData = actUserDataStored[chatId]
+    userData['addresses'][addressType] = newDict
+    updateUserEntry(db, chatId, addresses=userData['addresses'])
+    actUserDataNew = actUserDataStored
+    actUserDataNew[chatId] = userData
+    saveUserDataPickle(actUserDataNew)
+
 def saveUserDataPickle(actUserData):
     pickle.dump(actUserData, open("actUserData", "wb"))
 def getUserDataPickle():

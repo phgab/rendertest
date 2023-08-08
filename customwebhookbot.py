@@ -59,6 +59,7 @@ from telegram.ext import (
 
 from convHandlerBikeNEW import getConvHandlerBike
 from convHandlerWeatherNEW import getConvHandlerWeather
+from convHandlerSettings import getConvHandlerSettings
 from stdBotCommandsNEW import addBotCommands
 from weatherFuncts import returnMinutely, returnMinutelyHourly
 from gbMongoDB import getClientDB
@@ -78,7 +79,7 @@ WEBHOOK_HOST = os.environ['TELE_BOT_URL']
 ADMIN_ID = os.environ['ADMINCHAT']
 
 # active users dictionary
-dbClient, db = getClientDB()
+dbClient, globalDB_var = getClientDB()
 actUserData = {}
 
 
@@ -148,6 +149,7 @@ async def main() -> None:
     # save the values in `bot_data` such that we may easily access them in the callbacks
     application.bot_data["url"] = url
     application.bot_data["admin_chat_id"] = admin_chat_id
+    application.bot_data["globalDB_var"] = globalDB_var
 
     # register handlers
     # application.add_handler(CommandHandler("start", start))
@@ -156,6 +158,7 @@ async def main() -> None:
     # Conversation handlers
     application.add_handler(getConvHandlerWeather())
     application.add_handler(getConvHandlerBike())
+    application.add_handler(getConvHandlerSettings())
 
     # Standard commands
     application = addBotCommands(application, logger)
@@ -177,7 +180,7 @@ async def main() -> None:
                 name = data['message']['from']['first_name'] + \
                        ' ' + data['message']['from']['last_name']
                 date = data['message']['date']
-                userData = AUD_addUserData(db, actUserData, chatId, name=name, lastChecked=date)
+                userData = AUD_addUserData(globalDB_var, actUserData, chatId, name=name, lastChecked=date)
                 actUserData[chatId] = userData
         return Response()
 

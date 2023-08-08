@@ -51,32 +51,38 @@ def getSecondLayerKeyboard():
 async def settingsSecondLayer_bike(update, context):
     context.user_data['L1'] = 'bike'
     chatId = getChatId(update, context)
-    addressData_all = await listUserAddresses(chatId)
+    addressData_all = listUserAddresses(chatId)
     if 'bike' in addressData_all:
         addressData = addressData_all['bike']
     else:
         addressData = []
     context.user_data['addresses'] = addressData
+
+    query = update.callback_query
+    await query.answer()
     keyboard = getSecondLayerKeyboard()
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text('Aktion für Fahrrad-Adressen wählen:', reply_markup=reply_markup)
+    await query.edit_message_text('Aktion für Fahrrad-Adressen wählen:', reply_markup=reply_markup)
     return L3
 
 async def settingsSecondLayer_weather(update, context):
     context.user_data['L1'] = 'weather'
     chatId = getChatId(update, context)
-    addressData_all = await listUserAddresses(chatId)
+    addressData_all = listUserAddresses(chatId)
     if 'weather' in addressData_all:
         addressData = addressData_all['weather']
     else:
         addressData = []
     context.user_data['addresses'] = addressData
+
+    query = update.callback_query
+    await query.answer()
     keyboard = getSecondLayerKeyboard()
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text('Aktion für Wettervorhersage-Adressen wählen:', reply_markup=reply_markup)
+    await query.edit_message_text('Aktion für Wettervorhersage-Adressen wählen:', reply_markup=reply_markup)
     return L3
 
-async def listUserAddresses(chatId):
+def listUserAddresses(chatId):
     userData = loadSingleUserData(chatId)
     if 'addresses' in userData:
         addressData = userData['addresses']

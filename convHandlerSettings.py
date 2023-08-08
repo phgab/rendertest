@@ -118,7 +118,7 @@ async def confirmAddition(update, context):
     context.user_data['newShortName'] = shortName
     address = context.user_data['newAddress']
     coord = findLatLon(address)
-    context.user_data['coord'] = coord
+    context.user_data['newCoord'] = coord
 
     keyboard = [[InlineKeyboardButton("Ja", callback_data=str(C3A))],
                 [InlineKeyboardButton("Neu eingeben", callback_data=str(C3B))],

@@ -5,7 +5,7 @@ from actUserDataHandling import loadSingleUserData, AUD_updateUserAddressData
 from weatherReader import findLatLon
 
 FIRST, SECOND, THIRD = range(3)
-L1, L2, L3, SELECT, ADD1, ADD2, ADD3, EDIT1, EDIT2, EDIT3, EDIT4, DEL1, DEL2 = range(12)
+L1, L2, L3, SELECT, ADD1, ADD2, ADD3, EDIT1, EDIT2, EDIT3, EDIT4, DEL1, DEL2 = range(13)
 C1A, C1B, C2A, C2B, C2C, C3A, C3B, C3C, BACK = range(9)
 
 # 1. a. Fahrradadressen bearbeiten, b. Wettervorherasge-Adressen bearbeiten (jeweils Kurzname und Adresse eintragen)

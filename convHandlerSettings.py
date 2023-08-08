@@ -130,6 +130,7 @@ async def saveNewAddress(update, context):
     newAddressData = oldAddressData
     newAddressData.append({'address': address, 'shortName': shortName})
     AUD_updateUserAddressData(globalDB_var, chatId, addressType, newAddressData)
+    return ConversationHandler.END
 
 async def getSelectionKeyboard(update, context):
     t=0

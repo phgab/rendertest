@@ -15,7 +15,10 @@ def AUD_addUserData(db, actUserData, chatId, **dataEntries):
     userDataNew = getUserData(db, chatId)
     actUserDataStored = getUserDataPickle()
     actUserData = deep_update_pydantic(actUserData, actUserDataStored)
-    actUserData[chatId] = deep_update_pydantic(actUserData[chatId], userDataNew)
+    if chatId not in actUserData:
+        actUserData[chatId] = userData
+    else:
+        actUserData[chatId] = deep_update_pydantic(actUserData[chatId], userDataNew)
     saveUserDataPickle(actUserData)
     return actUserData
 

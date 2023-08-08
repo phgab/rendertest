@@ -28,7 +28,7 @@ def getUserDataPickle():
         actUserData = {}
     return actUserData
 
-def getUserData(chatId):
+def loadSingleUserData(chatId):
     actUserData = getUserDataPickle()
     return actUserData[chatId]
 

@@ -1,7 +1,7 @@
 import asyncio
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, MessageHandler, filters, CallbackQueryHandler, ConversationHandler
-from actUserDataHandling import loadSingleUserData, AUD_updateUserAddressData
+from actUserDataHandling import loadSingleUserData, AUD_updateUserAddressData, getChatId
 from weatherReader import findLatLon
 
 FIRST, SECOND, THIRD = range(3)
@@ -292,15 +292,15 @@ async def cancel(update, context):
 
     return ConversationHandler.END
 
-def getChatId(update, context):
-    chat_id = -1
-    if update.message is not None:
-        # from a text message
-        chat_id = str(update.message.chat.id)
-    elif update.callback_query is not None:
-        # from a callback message
-        chat_id = str(update.callback_query.message.chat.id)
-    return chat_id
+# def getChatId(update, context):
+#     chat_id = -1
+#     if update.message is not None:
+#         # from a text message
+#         chat_id = str(update.message.chat.id)
+#     elif update.callback_query is not None:
+#         # from a callback message
+#         chat_id = str(update.callback_query.message.chat.id)
+#     return chat_id
 
 
 # async def weatherLocChoice(update, context):

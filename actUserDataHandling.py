@@ -51,6 +51,16 @@ def loadSingleUserData(chatId):
     actUserData = getUserDataPickle()
     return actUserData[chatId]
 
+def getChatId(update, context):
+    chat_id = -1
+    if update.message is not None:
+        # from a text message
+        chat_id = str(update.message.chat.id)
+    elif update.callback_query is not None:
+        # from a callback message
+        chat_id = str(update.callback_query.message.chat.id)
+    return chat_id
+
 def deep_update_pydantic(mapping: Dict[KeyType, Any], *updating_mappings: Dict[KeyType, Any]) -> Dict[KeyType, Any]:
     updated_mapping = mapping.copy()
     for updating_mapping in updating_mappings:

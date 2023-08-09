@@ -58,7 +58,7 @@ from telegram.ext import (
 )
 
 from convHandlerBikeNEW_v2 import getConvHandlerBike
-from convHandlerWeatherNEW import getConvHandlerWeather
+from convHandlerWeatherNEW_v2 import getConvHandlerWeather
 from convHandlerSettings import getConvHandlerSettings
 from stdBotCommandsNEW import addBotCommands
 from weatherFuncts import returnMinutely, returnMinutelyHourly

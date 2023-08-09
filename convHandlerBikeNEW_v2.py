@@ -10,6 +10,7 @@ async def bikeStart(update, context):
     userData = loadSingleUserData(chatId)
     if ('addresses' in userData and 'bike' in userData['addresses'] and
         0 < len(userData['addresses']['bike'])):
+        context.user_data['addresses'] = userData['addresses']['bike']
         keyboard = []
         for ctr, address in enumerate(userData['addresses']['bike']):
             keyboard.append([InlineKeyboardButton(address['shortName'], callback_data=str(ctr))])
@@ -29,13 +30,12 @@ async def bikeEval(update, context):
     bot = context.bot
     qData = query.data
     adID = int(qData)
-    chatId = getChatId(update, context)
-    userData = loadSingleUserData(chatId)
-    if 'coord' in userData['addresses']['bike'][adID]:
-        coord = userData['addresses']['bike'][adID]['coord']
+    addresses = context.user_data['addresses']
+    if 'coord' in addresses[adID]:
+        coord = addresses[adID]['coord']
         returnStr, fileName, errorCode = returnMinutely({"coord": coord})
     else:
-        address = userData['addresses']['bike'][adID]['address']
+        address = addresses[adID]['address']
         returnStr, fileName, errorCode = returnMinutely({"address": address})
 
     if errorCode == -2:

@@ -9,11 +9,27 @@ async def bikeStart(update, context):
     chatId = getChatId(update, context)
     userData = loadSingleUserData(chatId)
     if ('addresses' in userData and 'bike' in userData['addresses'] and
-        0 < len(userData['addresses']['bike'])):
-        context.user_data['addresses'] = userData['addresses']['bike']
+            0 < len(userData['addresses']['bike'])):
+        addresses = userData['addresses']['bike']
+        context.user_data['addresses'] = addresses
         keyboard = []
-        for ctr, address in enumerate(userData['addresses']['bike']):
-            keyboard.append([InlineKeyboardButton(address['shortName'], callback_data=str(ctr))])
+        numAdr = len(addresses)
+        if 2 < numAdr:
+            if (numAdr % 2) == 0:
+                rng = range(int(numAdr / 2))
+            else:
+                rng = range(int((numAdr - 1) / 2))
+            for idx in rng:
+                keyboard.append([InlineKeyboardButton(addresses[idx * 2]['shortName'], callback_data=str(idx * 2)),
+                                 InlineKeyboardButton(addresses[idx * 2 + 1]['shortName'],
+                                                      callback_data=str(idx * 2 + 1))])
+            if (numAdr % 2) == 1:
+                keyboard.append(
+                    [InlineKeyboardButton(addresses[numAdr - 1]['shortName'], callback_data=str(numAdr - 1))])
+        else:
+            for ctr, address in enumerate(userData['addresses']['weather']):
+                keyboard.append([InlineKeyboardButton(address['shortName'], callback_data=str(ctr))])
+
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.message.reply_text('Von wo möchtest du fahren? Zum Abbrechen \cancel.', reply_markup=reply_markup)
         return 1
@@ -49,8 +65,8 @@ async def bikeEval(update, context):
 
 
 async def cancel(update, context):
-    #user = update.message.from_user
-    #logger.info("User %s canceled the conversation." % user.first_name)
+    # user = update.message.from_user
+    # logger.info("User %s canceled the conversation." % user.first_name)
     await update.message.reply_text('Abgebrochen')
 
     return ConversationHandler.END
@@ -58,10 +74,10 @@ async def cancel(update, context):
 
 def getConvHandlerBike():
     convHandlerBike = ConversationHandler(
-        entry_points=[CommandHandler("fahrrad" ,bikeStart)],
+        entry_points=[CommandHandler("fahrrad", bikeStart)],
         states={
             1: [CallbackQueryHandler(bikeEval)
-                    ],
+                ],
         },
         fallbacks=[CommandHandler('cancel', cancel)]
     )

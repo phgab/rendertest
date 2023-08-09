@@ -48,10 +48,23 @@ async def fixedLoc(update, context):
     userData = loadSingleUserData(chatId)
     if ('addresses' in userData and 'weather' in userData['addresses'] and
             0 < len(userData['addresses']['weather'])):
-        context.user_data['addresses'] = userData['addresses']['weather']
+        addresses = userData['addresses']['weather']
+        context.user_data['addresses'] = addresses
         keyboard = []
-        for ctr, address in enumerate(userData['addresses']['weather']):
-            keyboard.append([InlineKeyboardButton(address['shortName'], callback_data=str(ctr))])
+        numAdr = len(addresses)
+        if 2 < numAdr:
+            if (numAdr % 2) == 0:
+                rng = range(int(numAdr/2))
+            else:
+                rng = range(int((numAdr - 1) / 2))
+            for idx in rng:
+                keyboard.append([InlineKeyboardButton(addresses[idx*2]['shortName'], callback_data=str(idx*2)),
+                                 InlineKeyboardButton(addresses[idx*2 + 1]['shortName'], callback_data=str(idx*2 + 1))])
+            if (numAdr % 2) == 1:
+                keyboard.append([InlineKeyboardButton(addresses[numAdr-1]['shortName'], callback_data=str(numAdr-1))])
+        else:
+            for ctr, address in enumerate(userData['addresses']['weather']):
+                keyboard.append([InlineKeyboardButton(address['shortName'], callback_data=str(ctr))])
         reply_markup = InlineKeyboardMarkup(keyboard)
         await query.edit_message_text('Welche Adresse?', reply_markup=reply_markup)
         return SECOND

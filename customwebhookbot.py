@@ -174,7 +174,7 @@ async def main() -> None:
         )
         # check if actUserDate requires an update for the curent runtime
         data = await request.json()
-        print(json.dumps(data))
+        # print(json.dumps(data))
         if 'message' in data:
             actUserData = application.bot_data['actUserData']
             chatId = str(data['message']['from']['id'])

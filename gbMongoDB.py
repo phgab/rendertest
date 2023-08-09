@@ -33,10 +33,10 @@ def ensureIndexSetup(db):
     try:
         indexesData = db.users.getIndexes()
         currentIndices = [i[0] for i in [list(index['key'].keys()) for index in indexesData]]
-        if 'chatID' not in currentIndices:
-            db.users.create_index([("chatID", ASCENDING)], unique=True)
+        if 'chatId' not in currentIndices:
+            db.users.create_index([("chatId", ASCENDING)], unique=True)
     except:
-        db.users.create_index([("chatID", ASCENDING)], unique=True)
+        db.users.create_index([("chatId", ASCENDING)], unique=True)
 
 def getUserData(db, chatId):
     try:

@@ -80,7 +80,6 @@ ADMIN_ID = os.environ['ADMINCHAT']
 
 # active users dictionary
 dbClient, globalDB_var = getClientDB()
-actUserData = {}
 
 
 @dataclass
@@ -150,6 +149,7 @@ async def main() -> None:
     application.bot_data["url"] = url
     application.bot_data["admin_chat_id"] = admin_chat_id
     application.bot_data["globalDB_var"] = globalDB_var
+    application.bot_data['actUserData'] = {}
 
     # register handlers
     # application.add_handler(CommandHandler("start", start))
@@ -174,14 +174,16 @@ async def main() -> None:
         )
         # check if actUserDate requires an update for the curent runtime
         data = await request.json()
+        print(json.dumps(data))
         if 'message' in data:
+            actUserData = application.bot_data['actUserData']
             chatId = str(data['message']['from']['id'])
             if chatId not in actUserData:
                 name = data['message']['from']['first_name'] + \
                        ' ' + data['message']['from']['last_name']
                 date = data['message']['date']
                 userData = AUD_addUserData(globalDB_var, actUserData, chatId, name=name, lastChecked=date)
-                actUserData[chatId] = userData
+                application.bot_data['actUserData'][chatId] = userData
         return Response()
 
     async def custom_updates(request: Request) -> PlainTextResponse:

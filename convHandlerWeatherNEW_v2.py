@@ -6,10 +6,6 @@ from actUserDataHandling import loadSingleUserData, getChatId
 
 FIRST, SECOND, THIRD = range(3)
 ENTERLOC, FIXEDLOC, USERLOC = range(3)
-fixedAdr = [["Slicherstr 6", ", 30163 Hannover"],
-            ["Stadtfelddamm 34", ", 30625 Hannover"],
-            ["Wiedenthaler Sand 9", ", 21147 Hamburg"],
-            ["An der Hasenkuhle 7", ", 21224 Rosengarten"]]
 
 def getConvHandlerWeather():
     convHandlerWeather = ConversationHandler(

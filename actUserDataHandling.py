@@ -1,4 +1,5 @@
 from gbMongoDB import getUserData, createUserEntry, updateUserEntry
+from gbCronJobs import createJob, updateJob, deleteJob
 import os.path
 import pickle
 from typing import Any, Dict, TypeVar
@@ -36,6 +37,60 @@ def AUD_updateUserAddressData(db, chatId, addressType, newDict):
     updateUserEntry(db, chatId, addresses=userData['addresses'])
     actUserDataNew = actUserDataStored
     actUserDataNew[chatId] = userData
+    saveUserDataPickle(actUserDataNew)
+
+def AUD_addUserCronJobData(db, chatId, url, enabled, title, schedule):
+    actUserDataStored = getUserDataPickle()
+    userData = actUserDataStored[chatId]
+    jobId = createJob(url, enabled, title, schedule)
+    if 'cronJobs' in userData:
+        allJobs = userData['cronJobs']
+    else:
+        allJobs = []
+    jobNum = len(allJobs)
+    cronTitle = str(chatId) + '-' + str(jobNum).zfill(3)
+    jobDict = {'cronID': jobId, 'title': title, 'cronData': {'job': {
+                'url': url,
+                'enabled': enabled,
+                'title': cronTitle,
+                'saveResponses': False,
+                'schedule': schedule
+                }}}
+    allJobs.append(jobDict)
+    updateUserEntry(db, chatId, cronJobs=allJobs)
+    actUserDataNew = actUserDataStored
+    actUserDataNew[chatId]['cronJobs'] = allJobs
+    saveUserDataPickle(actUserDataNew)
+    return jobNum
+
+def AUD_updateUserCronJobData(db, chatId, jobNum, **dataEntries):
+    actUserDataStored = getUserDataPickle()
+    allJobs = actUserDataStored[chatId]['cronJobs']
+    jobDict = allJobs[jobNum]
+    jobId = jobDict[jobNum]['jobId']
+    for dataKey, dataEntry in dataEntries.items():
+        if dataKey in jobDict['cronData']['job']:
+            jobDict['cronData']['job'][dataKey] = dataEntry
+            updateJob(jobId, dataKey, dataEntry)
+        else:
+            jobDict[dataKey] = dataEntry
+    allJobs[jobNum] = jobDict
+    updateUserEntry(db, chatId, cronJobs=allJobs)
+    actUserDataNew = actUserDataStored
+    actUserDataNew[chatId]['cronJobs'] = allJobs
+    saveUserDataPickle(actUserDataNew)
+
+def AUD_deleteUserCronJobData(db, chatId, jobNum):
+    actUserDataStored = getUserDataPickle()
+    allJobs = actUserDataStored[chatId]['cronJobs']
+    jobId = allJobs[jobNum]['jobId']
+
+    del allJobs[jobNum]
+    deleteJob(jobId)
+
+    updateUserEntry(db, chatId, cronJobs=allJobs)
+    actUserDataNew = actUserDataStored
+    actUserDataNew[chatId]['cronJobs'] = allJobs
     saveUserDataPickle(actUserDataNew)
 
 def saveUserDataPickle(actUserData):

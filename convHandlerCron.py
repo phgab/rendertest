@@ -16,12 +16,38 @@ C1A, C1B, C1C, C1D, C1E, C2A, C2B, C2C, C3A, C3B, C3C, BACK = range(12)
 # b.: bei Klick werden Details angezeigt
 # c.: Bei Klick Buttons mit den jeweiligen bearbeitbaren / zu erstellenden Feldern
 # e.: are you sure?
+# todo: vllt durch context vars integrieren, dass auch einzelne Felder bearbeitet werden können, mit
+# a. ['editSingle'] und b. ['editEntered'] um die jeweils zweite Funktion dann wieder zu verlassen
 
 
 def getConvHandlerCron():
     convHandlerCron = ConversationHandler(
         entry_points=[CommandHandler("erinnerungen", cronFirstLayer)],
         states={
+            # eine Funktion, in der nach callback differenziert wird
+            SELECT: [CallbackQueryHandler(selectJob, pattern='^(?!.*' + JOB_NEW + ').*$'),  # everything except
+                     CallbackQueryHandler(startNewJob, pattern='^' + str(JOB_NEW) + '$')],
+            DETAILS: [CallbackQueryHandler(showJobDetails)],
+            TOGGLE: [CallbackQueryHandler(toggleJob)],
+            DELETE: [CallbackQueryHandler(deleteJob)],
+            # new/edit steps
+            TYPE: [CallbackQueryHandler(selectJobType)],
+            SCH_WDAYS: [CallbackQueryHandler(selectWDays)],
+            SCH_HOURS: [CallbackQueryHandler(selectHours, pattern='^(?!.*' + MANUAL_SEL + ').*$'),
+                        CallbackQueryHandler(enterWDays, pattern='^' + str(MANUAL_SEL) + '$'),
+                        MessageHandler(filters.TEXT, readWDays)],
+            SCH_MIN: [CallbackQueryHandler(selectMin, pattern='^(?!.*' + MANUAL_SEL + ').*$'),
+                        CallbackQueryHandler(enterHours, pattern='^' + str(MANUAL_SEL) + '$'),
+                        MessageHandler(filters.TEXT, readHours)],
+            TITLE: [CallbackQueryHandler(enterTitle, pattern='^(?!.*' + MANUAL_SEL + ').*$'),
+                    CallbackQueryHandler(enterMin, pattern='^' + str(MANUAL_SEL) + '$'),
+                    MessageHandler(filters.TEXT, readMin)],
+            CONFIRM: [MessageHandler(filters.TEXT, confirmJob)],
+            SAVE: [CallbackQueryHandler(saveEdit, pattern='^' + str(CNFRM_EDIT) + '$'),
+                   CallbackQueryHandler(saveDeletion, pattern='^' + str(CNFRM_DEL) + '$'),
+                   CallbackQueryHandler(cancel, pattern='^' + str(ABORT) + '$')],
+
+
             L1: [CallbackQueryHandler(cronFirstLayer)],
             L2: [CallbackQueryHandler(settingsSecondLayer_bike, pattern='^' + str(C1A) + '$'),
                  CallbackQueryHandler(settingsSecondLayer_weather, pattern='^' + str(C1B) + '$')],

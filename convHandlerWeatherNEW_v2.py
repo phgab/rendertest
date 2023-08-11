@@ -18,7 +18,7 @@ def getConvHandlerWeather():
             SECOND: [MessageHandler(filters.LOCATION, readLoc),
                      MessageHandler(filters.TEXT, readAddress),
                      CallbackQueryHandler(evalSelectedAddress)
-                    ],
+                     ],
             },
         fallbacks=[CommandHandler('cancel', cancel)]
     )
@@ -142,6 +142,6 @@ async def evalSelectedAddress(update, context):
 async def cancel(update, context):
     #user = update.message.from_user
     #logger.info("User %s canceled the conversation." % user.first_name)
-    await update.message.reply_text('Okay dann halt nicht -.-')
+    await update.message.reply_text('Abgebrochen')
 
     return ConversationHandler.END

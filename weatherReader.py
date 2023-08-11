@@ -102,10 +102,10 @@ def findLocCoord(coord):
     lon = coord["lon"]
     url = 'https://nominatim.openstreetmap.org/search?q=' + \
           urllib.parse.quote(str(lat)+","+str(lon)) + '&format=json'
-    print('findLocCoord\n'+url)
+    # print('findLocCoord\n'+url)
 
     response = requests.get(url).json()
-    print(json.dumps(response))
+    # print(json.dumps(response))
     if "lat" in response[0]:
         display_name = response[0]["display_name"]
         display_name_s = display_name.split(", ")

@@ -182,7 +182,7 @@ async def main() -> None:
                 name = data['message']['from']['first_name'] + \
                        ' ' + data['message']['from']['last_name']
                 date = data['message']['date']
-                userData = AUD_addUserData(globalDB_var, actUserData, chatId, name=name, lastChecked=date)
+                userData = await AUD_addUserData(globalDB_var, actUserData, chatId, name=name, lastChecked=date)
                 application.bot_data['actUserData'][chatId] = userData
         return Response()
 

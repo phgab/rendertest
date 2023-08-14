@@ -5,7 +5,7 @@ from actUserDataHandling import loadSingleUserData, AUD_updateUserAddressData, g
 from weatherReader import findLatLon
 
 (SELECT, DETAILS, TOGGLE, DELETE,
- TYPE, SCH_WDAYS, SCH_HOURS, SCH_MIN,
+ TYPE, ADDRESS, SCH_WDAYS, SCH_HOURS, SCH_MIN,
  TITLE, CONFIRM, SAVE, ERROR) = range(12)
 (L1_NEW, L1_SHOW, L1_EDIT, L1_TOGGLE, L1_DELETE,
  CNFRM_EDIT, CNFRM_DEL, ABORT, BACK, MANUAL_SEL,
@@ -39,6 +39,7 @@ def getConvHandlerCron():
             DELETE: [CallbackQueryHandler(deleteJob)],
             # new/edit steps
             TYPE: [CallbackQueryHandler(selectJobType)],
+            ADDRESS: [CallbackQueryHandler(selectAddress)],
             SCH_WDAYS: [CallbackQueryHandler(selectWDays)],
             SCH_HOURS: [CallbackQueryHandler(enterHours, pattern='^(?!.*' + MANUAL_SEL + ').*$'),
                         CallbackQueryHandler(enterWDays, pattern='^' + str(MANUAL_SEL) + '$'),
@@ -57,6 +58,7 @@ def getConvHandlerCron():
     )
     return convHandlerCron
 
+
 async def cronFirstLayer(update, context):
     if 'chatId' not in context.user_data:
         chatId = getChatId(update, context)
@@ -65,11 +67,12 @@ async def cronFirstLayer(update, context):
     keyboard = [[InlineKeyboardButton("Erinnerung hinzufügen", callback_data=str(L1_NEW))],
                 [InlineKeyboardButton("Meine Erinnerungen anzeigen", callback_data=str(L1_SHOW))],
                 [InlineKeyboardButton("Erinnerungen bearbeiten", callback_data=str(L1_EDIT))],
-                [InlineKeyboardButton("Erinnerungen aktivieren/deaktivieren", callback_data=str(L1_TOGGLE))],
+                [InlineKeyboardButton("Erinnerungen aktivieren / deaktivieren", callback_data=str(L1_TOGGLE))],
                 [InlineKeyboardButton("Erinnerung löschen", callback_data=str(L1_DELETE))]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text('Bitte wählen:', reply_markup=reply_markup)
     return SELECT
+
 
 def listUserCronJobs(chatId):
     userData = loadSingleUserData(chatId)
@@ -79,10 +82,18 @@ def listUserCronJobs(chatId):
         cronJobs = []
     return cronJobs
 
+
 async def selectJob(update, context):
     query = update.callback_query
     qData = query.data
-    returndict = {str(L1_SHOW): DETAILS, str(L1_EDIT): TYPE, str(L1_TOGGLE): TOGGLE, str(L1_DELETE): DELETE}
+    returnDict = {str(L1_SHOW): DETAILS,
+                  str(L1_EDIT): TYPE,
+                  str(L1_TOGGLE): TOGGLE,
+                  str(L1_DELETE): DELETE}
+    msgDict = {str(L1_SHOW): 'zur detaillierten Ansicht',
+               str(L1_EDIT): 'zum Bearbeiten',
+               str(L1_TOGGLE): 'zum Aktivieren / Deaktivieren',
+               str(L1_DELETE): 'zum Löschen'}
     if qData == str(L1_EDIT):
         context.user_data['editType'] = 'edit'
     cronJobs = context.user_data['cronJobs']
@@ -90,12 +101,18 @@ async def selectJob(update, context):
     for idxJ, jobData in enumerate(cronJobs):
         jobNum = str(idxJ + 1)
         jobTitle = jobData['title']
-        # jobSchedule = jobData['cronData']['job']['schedule']
-        nameStr = jobNum + ': ' + jobTitle
+        jobActivation = jobData['cronData']['job']['enabled']
+        if not jobActivation:
+            # todo: add stop unicode (128683?)
+            nameStr = '\uF6AB ' + jobNum + ': ' + jobTitle
+        else:
+            nameStr = jobNum + ': ' + jobTitle
         keyboard.append([InlineKeyboardButton(nameStr, callback_data=str(idxJ))])
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await query.edit_message_text('Aktion für Fahrrad-Adressen wählen:', reply_markup=reply_markup)
-    return returndict[qData]
+    await query.edit_message_text('Erinnerung ' + msgDict[qData] + ' auswählen:',
+                                  reply_markup=reply_markup)
+    return returnDict[qData]
+
 
 async def startNewJob(update, context):
     query = update.callback_query
@@ -114,66 +131,183 @@ async def showJobDetails(update, context):
     jobTitle = cronJob['title']
     jobSchedule = cronJob['cronData']['job']['schedule']
     scheduleStr = scheduleDict2Str(jobSchedule)
-    await query.edit_message_text('Aktion für Fahrrad-Adressen wählen:')
+    detailStr = ('Ausgewählte Erinnerung: \n' +
+                 '#' + jobNumStr + ': "' + jobTitle + '"\n' +
+                 scheduleStr)
+    await query.edit_message_text(detailStr)
+    return ConversationHandler.END
 
 
 def scheduleDict2Str(scheduleDict):
-    scheduleStr = 'schedule'
+    wdays = sorted(scheduleDict['wdays'])
+    hours = sorted(scheduleDict['hours'])
+    minutes = sorted(scheduleDict['minutes'])
+    if wdays == list(range(7)):
+        wDaysStr = 'Täglich '
+    elif sorted(wdays) == list(range(1, 6)):
+        wDaysStr = 'Unter der Woche '
+    elif sorted(wdays) == [5, 6]:
+        wDaysStr = 'Am Wochenende '
+    else:
+        wDaysList = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
+        numWDays = len(wdays)
+        wdays_temp = sorted([(day - 1) % 7 for day in wdays])
+        wdays_sun = [(day + 1) % 7 for day in wdays_temp]
+
+        wDaysStr = 'Am ' + wDaysList[wdays_sun[0]]
+        for idx in range(1, numWDays - 1):
+            wDaysStr = wDaysStr + ', ' + wDaysList[wdays_sun[idx]]
+        if 1 < numWDays:
+            wDaysStr = wDaysStr + ' und ' + wDaysList[wdays_sun[numWDays - 1]] + ' '
+        else:
+            wDaysStr = wDaysStr + ' '
+
+    numHours = len(hours)
+    numMinutes = len(minutes)
+    timeStr = 'Um ' + str(hours[0]).zfill(2) + ':' + str(minutes[0]).zfill(2)
+    for idxH in range(numHours):
+        for idxM in range(numMinutes):
+            if (idxH + 1) * (idxM + 1) == 1:
+                continue
+            elif (idxH + 1) * (idxM + 1) == numHours * numMinutes:
+                timeStr = (timeStr + ' und ' +
+                           str(hours[idxH]).zfill(2) + ':' + str(minutes[idxM]).zfill(2))
+            else:
+                timeStr = (timeStr + ', ' +
+                           str(hours[idxH]).zfill(2) + ':' + str(minutes[idxM]).zfill(2))
+
+    scheduleStr = wDaysStr + timeStr
     return scheduleStr
+
 
 async def toggleJob(update, context):
     query = update.callback_query
     qData = query.data
+    globalDB_var = context.bot_data['globalDB_var']
+    chatId = context.user_data['chatId']
+    jobNum = int(qData)
+    jobTitle = context.user_data['cronJobs'][jobNum]['title']
+    enabled = context.user_data['cronJobs'][jobNum]['cronData']['job']['enabled']
+
+    cronJobs = await AUD_updateUserCronJobData(globalDB_var, chatId, jobNum, enabled=not enabled)
+    context.user_data['cronJobs'] = cronJobs
+    toggleStr = 'Erinnerung #' + str(jobNum) + ': ' + jobTitle
+    if enabled:
+        toggleStr = toggleStr + ' erfolgreich deaktiviert.'
+    else:
+        toggleStr = toggleStr + ' erfolgreich aktiviert.'
+    await query.edit_message_text(toggleStr)
+    return ConversationHandler.END
+
 
 async def deleteJob(update, context):
     query = update.callback_query
     qData = query.data
+    jobNum = int(qData)
+    jobTitle = context.user_data['cronJobs'][jobNum]['title']
+    replyText = ('Soll Erinnerung #' + str(jobNum) + ':\n' + jobTitle +
+                 '\n wirklich gelöscht werden?')
+
+    keyboard = [[InlineKeyboardButton("Ja", callback_data=str(CNFRM_DEL))],
+                [InlineKeyboardButton("Nein", callback_data=str(ABORT))]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await query.answer()
+    await query.edit_message_text(replyText, reply_markup=reply_markup)
+    return SAVE
+
 
 async def saveDeletion(update, context):
     query = update.callback_query
     qData = query.data
+    globalDB_var = context.bot_data['globalDB_var']
+    chatId = context.user_data['chatId']
+    jobNum = int(qData)
+    jobTitle = context.user_data['cronJobs'][jobNum]['title']
+
+    cronJobs = await AUD_deleteUserCronJobData(globalDB_var, chatId, jobNum)
+
+    context.user_data['cronJobs'] = cronJobs
+    deleteStr = 'Erinnerung #' + str(jobNum) + ': ' + jobTitle + ' erfolgreich gelöscht.'
+
+    await query.edit_message_text(deleteStr)
+    return ConversationHandler.END
+
 
 async def selectJobType(update, context):
     query = update.callback_query
     qData = query.data
+    keyboard = [[InlineKeyboardButton("Fahrradvorhersage (1h)", callback_data=str(TYPE_BIKE))],
+                [InlineKeyboardButton("Wettervorhersage (24h)", callback_data=str(TYPE_WEATHER))]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await query.answer()
+    await query.edit_message_text('Bitte Erinnerungs-Art wählen.', reply_markup=reply_markup)
+    return ADDRESS
+
+
+async def selectAddress(update, context):
+    query = update.callback_query
+    qData = query.data
+    # TYPE_BIKE, TYPE_WEATHER,
+    # globalDB_var = context.bot_data['globalDB_var']
+    # chatId = context.user_data['chatId']
+    # jobNum = int(qData)
+    # jobTitle = context.user_data['cronJobs'][jobNum]['title']
+    #
+    # cronJobs = await AUD_deleteUserCronJobData(globalDB_var, chatId, jobNum)
+
+    return SCH_WDAYS
+
 
 async def selectWDays(update, context):
     query = update.callback_query
     qData = query.data
 
+
 async def enterWDays(update, context):
     t=0
 
+
 async def readWDays_enterHours(update, context):
     wDaysMsg = update.message.text
+
 
 async def enterHours(update, context):
     query = update.callback_query
     qData = query.data
 
+
 async def readHours_selectMin(update, context):
     hrsMsg = update.message.text
+
 
 async def enterTitle(update, context):
     query = update.callback_query
     qData = query.data
 
+
 async def enterMin(update, context):
     query = update.callback_query
     qData = query.data
 
+
 async def readMin_enterTitle(update, context):
     minMsg = update.message.text
+
 
 async def confirmJob(update, context):
     title = update.message.text
 
+
 async def saveEdit(update, context):
     t=0
+
 
 async def error_input(update, context):
     query = update.callback_query
     qData = query.data
+
 
 async def cancel(update, context):
     # user = update.message.from_user

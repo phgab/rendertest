@@ -5,7 +5,7 @@ import pickle
 from typing import Any, Dict, TypeVar
 KeyType = TypeVar('KeyType')
 
-def AUD_addUserData(db, actUserData, chatId, **dataEntries):
+async def AUD_addUserData(db, actUserData, chatId, **dataEntries):
     userData = getUserData(db, chatId)
     if len(userData) == 0:
         createUserEntry(db, chatId, **dataEntries)
@@ -23,7 +23,7 @@ def AUD_addUserData(db, actUserData, chatId, **dataEntries):
     saveUserDataPickle(actUserData)
     return actUserData
 
-def AUD_updateUserAddressData(db, chatId, addressType, newDict):
+async def AUD_updateUserAddressData(db, chatId, addressType, newDict):
     actUserDataStored = getUserDataPickle()
     userData = actUserDataStored[chatId]
     if 'addresses' in userData:
@@ -39,16 +39,16 @@ def AUD_updateUserAddressData(db, chatId, addressType, newDict):
     actUserDataNew[chatId] = userData
     saveUserDataPickle(actUserDataNew)
 
-def AUD_addUserCronJobData(db, chatId, url, enabled, title, schedule):
+async def AUD_addUserCronJobData(db, chatId, url, enabled, title, schedule):
     actUserDataStored = getUserDataPickle()
     userData = actUserDataStored[chatId]
-    jobId = createJob(url, enabled, title, schedule)
     if 'cronJobs' in userData:
         allJobs = userData['cronJobs']
     else:
         allJobs = []
     jobNum = len(allJobs)
     cronTitle = str(chatId) + '-' + str(jobNum).zfill(3)
+    jobId = createJob(url, enabled, cronTitle, schedule)
     jobDict = {'cronID': jobId, 'title': title, 'cronData': {'job': {
                 'url': url,
                 'enabled': enabled,
@@ -63,7 +63,7 @@ def AUD_addUserCronJobData(db, chatId, url, enabled, title, schedule):
     saveUserDataPickle(actUserDataNew)
     return jobNum
 
-def AUD_updateUserCronJobData(db, chatId, jobNum, **dataEntries):
+async def AUD_updateUserCronJobData(db, chatId, jobNum, **dataEntries):
     actUserDataStored = getUserDataPickle()
     allJobs = actUserDataStored[chatId]['cronJobs']
     jobDict = allJobs[jobNum]
@@ -79,8 +79,9 @@ def AUD_updateUserCronJobData(db, chatId, jobNum, **dataEntries):
     actUserDataNew = actUserDataStored
     actUserDataNew[chatId]['cronJobs'] = allJobs
     saveUserDataPickle(actUserDataNew)
+    return allJobs
 
-def AUD_deleteUserCronJobData(db, chatId, jobNum):
+async def AUD_deleteUserCronJobData(db, chatId, jobNum):
     actUserDataStored = getUserDataPickle()
     allJobs = actUserDataStored[chatId]['cronJobs']
     jobId = allJobs[jobNum]['jobId']
@@ -92,6 +93,7 @@ def AUD_deleteUserCronJobData(db, chatId, jobNum):
     actUserDataNew = actUserDataStored
     actUserDataNew[chatId]['cronJobs'] = allJobs
     saveUserDataPickle(actUserDataNew)
+    return allJobs
 
 def saveUserDataPickle(actUserData):
     pickle.dump(actUserData, open("actUserData", "wb"))

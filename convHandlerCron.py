@@ -33,7 +33,7 @@ def getConvHandlerCron():
     convHandlerCron = ConversationHandler(
         entry_points=[CommandHandler("erinnerungen", cronFirstLayer)],
         states={
-            SELECT: [CallbackQueryHandler(selectJob, pattern='^(?!.*' + L1_NEW + ').*$'),  # everything except
+            SELECT: [CallbackQueryHandler(selectJob, pattern='^(?!.*' + str(L1_NEW) + ').*$'),  # everything except
                      CallbackQueryHandler(selectJobType, pattern='^' + str(L1_NEW) + '$')],
             DETAILS: [CallbackQueryHandler(showJobDetails)],
             TOGGLE: [CallbackQueryHandler(toggleJob)],
@@ -46,11 +46,11 @@ def getConvHandlerCron():
                          CallbackQueryHandler(enterAddress, pattern='^' + str(MANUAL_SEL) + '$')],
             SCH_WDAYS: [CallbackQueryHandler(selectWDays),
                         MessageHandler(filters.TEXT, readAddress_selectWDays)],
-            SCH_HOURS: [CallbackQueryHandler(enterHours, pattern='^(?!.*' + MANUAL_SEL + ').*$'),
+            SCH_HOURS: [CallbackQueryHandler(enterHours, pattern='^(?!.*' + str(MANUAL_SEL) + ').*$'),
                         CallbackQueryHandler(enterWDays, pattern='^' + str(MANUAL_SEL) + '$'),
                         MessageHandler(filters.TEXT, readWDays_enterHours)],
             SCH_MIN: [MessageHandler(filters.TEXT, readHours_selectMin)],
-            TITLE: [CallbackQueryHandler(enterTitle, pattern='^(?!.*' + MANUAL_SEL + ').*$'),
+            TITLE: [CallbackQueryHandler(enterTitle, pattern='^(?!.*' + str(MANUAL_SEL) + ').*$'),
                     CallbackQueryHandler(enterMin, pattern='^' + str(MANUAL_SEL) + '$'),
                     MessageHandler(filters.TEXT, readMin_enterTitle)],
             CONFIRM: [MessageHandler(filters.TEXT, confirmJob)],

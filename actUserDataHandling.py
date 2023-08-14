@@ -6,14 +6,14 @@ from typing import Any, Dict, TypeVar
 KeyType = TypeVar('KeyType')
 
 async def AUD_addUserData(db, actUserData, chatId, **dataEntries):
-    userData = getUserData(db, chatId)
+    userData = await getUserData(db, chatId)
     if len(userData) == 0:
-        createUserEntry(db, chatId, **dataEntries)
+        await createUserEntry(db, chatId, **dataEntries)
     else:
         for dataKey, dataEntry in dataEntries.items():
             if dataKey not in userData or dataEntry != userData[dataKey]:
-                updateUserEntry(db, chatId, **{dataKey: dataEntry})
-    userDataNew = getUserData(db, chatId)
+                await updateUserEntry(db, chatId, **{dataKey: dataEntry})
+    userDataNew = await getUserData(db, chatId)
     actUserDataStored = getUserDataPickle()
     actUserData = deep_update_pydantic(actUserData, actUserDataStored)
     if chatId not in actUserData:
@@ -34,7 +34,7 @@ async def AUD_updateUserAddressData(db, chatId, addressType, newDict):
     else:
         userData['addresses'] = {addressType: newDict}
 
-    updateUserEntry(db, chatId, addresses=userData['addresses'])
+    await updateUserEntry(db, chatId, addresses=userData['addresses'])
     actUserDataNew = actUserDataStored
     actUserDataNew[chatId] = userData
     saveUserDataPickle(actUserDataNew)
@@ -48,7 +48,7 @@ async def AUD_addUserCronJobData(db, chatId, url, enabled, title, schedule):
         allJobs = []
     jobNum = len(allJobs)
     cronTitle = str(chatId) + '-' + str(jobNum).zfill(3)
-    jobId = createJob(url, enabled, cronTitle, schedule)
+    jobId = await createJob(url, enabled, cronTitle, schedule)
     jobDict = {'cronID': jobId, 'title': title, 'cronData': {'job': {
                 'url': url,
                 'enabled': enabled,
@@ -57,7 +57,7 @@ async def AUD_addUserCronJobData(db, chatId, url, enabled, title, schedule):
                 'schedule': schedule
                 }}}
     allJobs.append(jobDict)
-    updateUserEntry(db, chatId, cronJobs=allJobs)
+    await updateUserEntry(db, chatId, cronJobs=allJobs)
     actUserDataNew = actUserDataStored
     actUserDataNew[chatId]['cronJobs'] = allJobs
     saveUserDataPickle(actUserDataNew)
@@ -71,11 +71,11 @@ async def AUD_updateUserCronJobData(db, chatId, jobNum, **dataEntries):
     for dataKey, dataEntry in dataEntries.items():
         if dataKey in jobDict['cronData']['job']:
             jobDict['cronData']['job'][dataKey] = dataEntry
-            updateJob(jobId, dataKey, dataEntry)
+            await updateJob(jobId, dataKey, dataEntry)
         else:
             jobDict[dataKey] = dataEntry
     allJobs[jobNum] = jobDict
-    updateUserEntry(db, chatId, cronJobs=allJobs)
+    await updateUserEntry(db, chatId, cronJobs=allJobs)
     actUserDataNew = actUserDataStored
     actUserDataNew[chatId]['cronJobs'] = allJobs
     saveUserDataPickle(actUserDataNew)
@@ -87,9 +87,9 @@ async def AUD_deleteUserCronJobData(db, chatId, jobNum):
     jobId = allJobs[jobNum]['jobId']
 
     del allJobs[jobNum]
-    deleteJob(jobId)
+    await deleteJob(jobId)
 
-    updateUserEntry(db, chatId, cronJobs=allJobs)
+    await updateUserEntry(db, chatId, cronJobs=allJobs)
     actUserDataNew = actUserDataStored
     actUserDataNew[chatId]['cronJobs'] = allJobs
     saveUserDataPickle(actUserDataNew)

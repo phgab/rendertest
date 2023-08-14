@@ -27,7 +27,7 @@ async def bikeStart(update, context):
                 keyboard.append(
                     [InlineKeyboardButton(addresses[numAdr - 1]['shortName'], callback_data=str(numAdr - 1))])
         else:
-            for ctr, address in enumerate(userData['addresses']['weather']):
+            for ctr, address in enumerate(addresses):
                 keyboard.append([InlineKeyboardButton(address['shortName'], callback_data=str(ctr))])
 
         reply_markup = InlineKeyboardMarkup(keyboard)

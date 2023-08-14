@@ -18,17 +18,19 @@ DBCONNCTSTR = os.environ["DBCONNCTSTR"]
 # deleteUserCronJob
 # updateUserCronJobs
 
-def getClientDB():
+
+async def getClientDB():
     client = MongoClient(DBCONNCTSTR)
     try:
         client.server_info()
     except ConnectionFailure:
         print('MongoDB connection failure')
     db = client.gbweatherbot
-    ensureIndexSetup(db)
+    await ensureIndexSetup(db)
     return client, db
 
-def ensureIndexSetup(db):
+
+async def ensureIndexSetup(db):
     # users collection
     try:
         indexesData = db.users.getIndexes()
@@ -38,7 +40,8 @@ def ensureIndexSetup(db):
     except:
         db.users.create_index([("chatId", ASCENDING)], unique=True)
 
-def getUserData(db, chatId):
+
+async def getUserData(db, chatId):
     try:
         userData = db.users.find_one({'chatId': chatId})
         del userData['chatId']
@@ -46,13 +49,15 @@ def getUserData(db, chatId):
     except:
         return []
 
-def createUserEntry(db, chatId, **dataEntries):
+
+async def createUserEntry(db, chatId, **dataEntries):
     userData = {'chatId': chatId}
     for entryName, entryData in dataEntries.items():
         userData[entryName] = entryData
     db.users.insert_one(userData)
 
-def updateUserEntry(db, chatId, **dataEntries):
+
+async def updateUserEntry(db, chatId, **dataEntries):
     userData = {entryName: entryData for entryName, entryData
                 in dataEntries.items()}
     db.users.update_one({'chatId': chatId}, {'$set': userData})

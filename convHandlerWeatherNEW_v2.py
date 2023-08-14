@@ -63,7 +63,7 @@ async def fixedLoc(update, context):
             if (numAdr % 2) == 1:
                 keyboard.append([InlineKeyboardButton(addresses[numAdr-1]['shortName'], callback_data=str(numAdr-1))])
         else:
-            for ctr, address in enumerate(userData['addresses']['weather']):
+            for ctr, address in enumerate(addresses):
                 keyboard.append([InlineKeyboardButton(address['shortName'], callback_data=str(ctr))])
         reply_markup = InlineKeyboardMarkup(keyboard)
         await query.edit_message_text('Welche Adresse?', reply_markup=reply_markup)

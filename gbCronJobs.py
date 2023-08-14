@@ -12,12 +12,14 @@ headers = {
 
 #https://docs.cron-job.org/rest-api.html
 
+
 def getAllJobs():
     result = requests.get(ENDPOINT + '/jobs', headers=headers)  #, proxies=proxies)
     resultjsn = result.json()
     return resultjsn['jobs']
 
-def createJob(url, enabled, title, schedule): #folder?
+
+async def createJob(url, enabled, title, schedule): #folder?
     payload = {
         'job': {
             'url': url,
@@ -31,7 +33,8 @@ def createJob(url, enabled, title, schedule): #folder?
     resultjsn = result.json()
     return resultjsn['jobId']
 
-def updateJob(jobId, field, value):
+
+async def updateJob(jobId, field, value):
     payload = {
         'job': {
             field: value
@@ -41,7 +44,8 @@ def updateJob(jobId, field, value):
     resultjsn = result.json()
     return resultjsn['jobId']
 
-def deleteJob(jobId):
+
+async def deleteJob(jobId):
     result = requests.delete(ENDPOINT + '/jobs/' + str(jobId), headers=headers)  #), proxies=proxies)
     resultjsn = result.json()
     return resultjsn['jobId']

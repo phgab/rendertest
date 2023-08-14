@@ -39,7 +39,7 @@ async def AUD_updateUserAddressData(db, chatId, addressType, newDict):
     actUserDataNew[chatId] = userData
     saveUserDataPickle(actUserDataNew)
 
-async def AUD_addUserCronJobData(db, chatId, url, enabled, title, schedule):
+async def AUD_addUserCronJobData(db, chatId, jobType, addressData, enabled, title, schedule):
     actUserDataStored = getUserDataPickle()
     userData = actUserDataStored[chatId]
     if 'cronJobs' in userData:
@@ -48,20 +48,29 @@ async def AUD_addUserCronJobData(db, chatId, url, enabled, title, schedule):
         allJobs = []
     jobNum = len(allJobs)
     cronTitle = str(chatId) + '-' + str(jobNum).zfill(3)
+    url = getJobURL(chatId, jobType, addressData)
     jobId = await createJob(url, enabled, cronTitle, schedule)
-    jobDict = {'cronID': jobId, 'title': title, 'cronData': {'job': {
-                'url': url,
-                'enabled': enabled,
-                'title': cronTitle,
-                'saveResponses': False,
-                'schedule': schedule
-                }}}
+    jobDict = {'cronID': jobId, 'title': title, 'jobType': jobType, 'addressData': addressData,
+               'cronData': {
+                   'job': {
+                       'url': url,
+                       'enabled': enabled,
+                       'title': cronTitle,
+                       'saveResponses': False,
+                       'schedule': schedule
+                   }
+               }
+               }
     allJobs.append(jobDict)
     await updateUserEntry(db, chatId, cronJobs=allJobs)
     actUserDataNew = actUserDataStored
     actUserDataNew[chatId]['cronJobs'] = allJobs
     saveUserDataPickle(actUserDataNew)
     return jobNum
+
+def getJobURL(chatId, jobType, address):
+    jobURL = ''
+    return jobURL
 
 async def AUD_updateUserCronJobData(db, chatId, jobNum, **dataEntries):
     actUserDataStored = getUserDataPickle()
@@ -107,6 +116,22 @@ def getUserDataPickle():
 def loadSingleUserData(chatId):
     actUserData = getUserDataPickle()
     return actUserData[chatId]
+
+def listUserAddresses(chatId):
+    userData = loadSingleUserData(chatId)
+    if 'addresses' in userData:
+        addressData = userData['addresses']
+    else:
+        addressData = []
+    return addressData
+
+def listUserCronJobs(chatId):
+    userData = loadSingleUserData(chatId)
+    if 'cronJobs' in userData:
+        cronData = userData['cronJobs']
+    else:
+        cronData = []
+    return cronData
 
 def getChatId(update, context):
     chat_id = -1

@@ -1,7 +1,7 @@
 import asyncio
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, MessageHandler, filters, CallbackQueryHandler, ConversationHandler
-from actUserDataHandling import loadSingleUserData, AUD_updateUserAddressData, getChatId
+from actUserDataHandling import listUserAddresses, AUD_updateUserAddressData, getChatId
 from weatherReader import findLatLon
 
 FIRST, SECOND, THIRD = range(3)
@@ -87,14 +87,6 @@ async def settingsSecondLayer_weather(update, context):
     reply_markup = InlineKeyboardMarkup(keyboard)
     await query.edit_message_text('Aktion für Wettervorhersage-Adressen wählen:', reply_markup=reply_markup)
     return L3
-
-def listUserAddresses(chatId):
-    userData = loadSingleUserData(chatId)
-    if 'addresses' in userData:
-        addressData = userData['addresses']
-    else:
-        addressData = []
-    return addressData
 
 
 async def addAddress(update, context):

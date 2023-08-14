@@ -60,6 +60,7 @@ from telegram.ext import (
 from convHandlerBikeNEW_v2 import getConvHandlerBike
 from convHandlerWeatherNEW_v2 import getConvHandlerWeather
 from convHandlerSettings import getConvHandlerSettings
+from convHandlerCron import getConvHandlerCron
 from stdBotCommandsNEW import addBotCommands
 from weatherFuncts import returnMinutely, returnMinutelyHourly
 from gbMongoDB import getClientDB
@@ -159,6 +160,7 @@ async def main() -> None:
     application.add_handler(getConvHandlerWeather())
     application.add_handler(getConvHandlerBike())
     application.add_handler(getConvHandlerSettings())
+    application.add_handler(getConvHandlerCron())
 
     # Standard commands
     application = addBotCommands(application, logger)
@@ -236,7 +238,6 @@ async def main() -> None:
             await bot.sendMessage(chat_id, returnStr)
         elif reminderType == "weather":
             returnStr, [fileNameMin, fileNameHrl], errorCode = returnMinutelyHourly({"address": road + " " + housenr + ", " + city})
-
             await bot.sendPhoto(chat_id, open(fileNameHrl + ".jpg", 'rb'))
             await bot.sendPhoto(chat_id, open(fileNameMin + ".jpg", 'rb'))
             await bot.sendMessage(chat_id, returnStr)

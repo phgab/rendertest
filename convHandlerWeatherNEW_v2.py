@@ -15,8 +15,8 @@ def getConvHandlerWeather():
                     CallbackQueryHandler(fixedLoc, pattern='^' + str(FIXEDLOC) + '$'),
                     CallbackQueryHandler(userLoc, pattern='^' + str(USERLOC) + '$')
                     ],
-            SECOND: [MessageHandler(filters.LOCATION, readLoc),
-                     MessageHandler(filters.TEXT, readAddress),
+            SECOND: [MessageHandler(filters.LOCATION & (~ filters.COMMAND), readLoc),
+                     MessageHandler(filters.TEXT & (~ filters.COMMAND), readAddress),
                      CallbackQueryHandler(evalSelectedAddress)
                      ],
             },

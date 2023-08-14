@@ -404,7 +404,10 @@ async def selectWDays(update, context):
                  chosenAddress['coord']['place'] + ' erstellt.\n')
 
     reply_markup, replyText_curr, replyText_q = getWDayQuery(update, context)
-    replyText = replyText + replyText_curr + '\n' + replyText_q
+    if context.user_data['editType'] == 'new':
+        replyText = replyText + '\n' + replyText_q
+    else:
+        replyText = replyText + '\n' + replyText_curr + '\n' + replyText_q
     await query.answer()
     await query.edit_message_text(text=replyText, reply_markup=reply_markup)
     return SCH_HOURS
@@ -425,7 +428,10 @@ async def readAddress_selectWDays(update, context):
     replyText = 'Die Erinnerung wird für die Adresse "' + address + '" in ' + coord['place'] + ' erstellt.\n'
 
     reply_markup, replyText_curr, replyText_q = getWDayQuery(update, context)
-    replyText = replyText + replyText_curr + '\n' + replyText_q
+    if context.user_data['editType'] == 'new':
+        replyText = replyText + '\n' + replyText_q
+    else:
+        replyText = replyText + '\n' + replyText_curr + '\n' + replyText_q
     await update.message.reply_text(replyText, reply_markup=reply_markup)
     return SCH_HOURS
 
@@ -482,14 +488,16 @@ async def readWDays_enterHours(update, context):
         context.user_data['newJobData']['schedule']['wdays'] = newWDays
         replyText = 'Okay, die Ausführung der Erinnerung erfolgt ' + newWDayStr + '.'
     elif context.user_data['currentWDays'] != newWDays:
-        context.user_data['jobEdits']['schedule'] = {} # todo: das hier irgendwie hoch integrieren?? oder doch erst in save das dict aufmachen?
-        context.user_data['jobEdits']['schedule']['wdays'] = newWDays
+        context.user_data['jobEdits']['wdays'] = newWDays
         replyText = 'Okay, die Ausführung der Erinnerung wurde zu ' + newWDayStr + ' geändert.'
     else:
         replyText = 'Okay, die Erinnerung wird weiter ' + newWDayStr + ' ausgeführt.'
 
     replyText_curr, replyText_q = getHourQuery(update, context)
-    replyText = replyText + '\n' + replyText_curr + '\n' + replyText_q
+    if context.user_data['editType'] == 'new':
+        replyText = replyText + '\n' + replyText_q
+    else:
+        replyText = replyText + '\n' + replyText_curr + '\n' + replyText_q
     await update.message.reply_text(replyText)
     return SCH_MIN
 
@@ -507,7 +515,8 @@ async def enterHours(update, context):
         replyTextWD = 'täglich'
 
     if context.user_data['editType'] == 'new':
-        context.user_data['newJobData']['wdays'] = newWDays
+        context.user_data['newJobData']['schedule'] = {}
+        context.user_data['newJobData']['schedule']['wdays'] = newWDays
         replyText = 'Okay, die Ausführung der Erinnerung erfolgt ' + replyTextWD + '.'
     elif context.user_data['currentWDays'] != newWDays:
         context.user_data['jobEdits']['wdays'] = newWDays
@@ -517,7 +526,10 @@ async def enterHours(update, context):
 
     replyText_curr, replyText_q = getHourQuery(update, context)
 
-    replyText = replyText + '\n' + replyText_curr + '\n' + replyText_q
+    if context.user_data['editType'] == 'new':
+        replyText = replyText + '\n' + replyText_q
+    else:
+        replyText = replyText + '\n' + replyText_curr + '\n' + replyText_q
     await query.answer()
     await query.edit_message_text(text=replyText)
     return SCH_MIN
@@ -561,7 +573,7 @@ async def readHours_selectMin(update, context):
     context.user_data['newHours'] = newHours
 
     if context.user_data['editType'] == 'new':
-        context.user_data['newJobData']['hours'] = newHours
+        context.user_data['newJobData']['schedule']['hours'] = newHours
         replyText = 'Okay, die Ausführung der Erinnerung erfolgt zu den Stunden ' + newHoursStr + '.'
     elif context.user_data['currentHours'] != newHours:
         context.user_data['jobEdits']['hours'] = newHours
@@ -570,20 +582,30 @@ async def readHours_selectMin(update, context):
         replyText = 'Okay, die Erinnerung wird weiter zu den Stunden ' + newHoursStr + ' ausgeführt.'
 
     reply_markup, replyText_curr, replyText_q = getMinutesQuery(update, context)
-    replyText = replyText + '\n' + replyText_curr + '\n' + replyText_q
+    if context.user_data['editType'] == 'new':
+        replyText = replyText + '\n' + replyText_q
+    else:
+        replyText = replyText + '\n' + replyText_curr + '\n' + replyText_q
     await update.message.reply_text(replyText, reply_markup=reply_markup)
     return TITLE
+
+
+def getTitleQuery(update, context):
+    if context.user_data['editType'] == 'edit':
+        currentTitle = context.user_data['selectedJob']['title']
+        context.user_data['currentTitle'] = currentTitle
+        replyText_curr = 'Der derzeitige Titel der Erinnerung ist: \n' + currentTitle
+        context.user_data['currentTitleText'] = replyText_curr
+    else:
+        replyText_curr = ''
+
+    replyText_q = ('Bitte einen Titel für die Erinnerung eingeben.')
+    return replyText_curr, replyText_q
 
 
 async def enterTitle(update, context):
     query = update.callback_query
     qData = query.data
-    # todo: das hier an minutes anpassen
-    keyboard = [[InlineKeyboardButton("Zur vollen Stunde", callback_data=str(MIN_0))],
-                [InlineKeyboardButton("Viertel nach", callback_data=str(MIN_15))],
-                [InlineKeyboardButton("Halb", callback_data=str(MIN_30))],
-                [InlineKeyboardButton("Viertel vor", callback_data=str(MIN_45))],
-                [InlineKeyboardButton("Manuell eingeben", callback_data=str(MANUAL_SEL))]]
     if qData == str(MIN_0):
         newMinutes = [0]
         replyTextMin = 'zur vollen Stunde'
@@ -593,18 +615,28 @@ async def enterTitle(update, context):
     elif qData == str(MIN_30):
         newMinutes = [30]
         replyTextMin = 'um Halb'
-    else: # all days
+    else:
         newMinutes = [45]
         replyTextMin = 'um Viertel vor'
 
     if context.user_data['editType'] == 'new':
-        context.user_data['newJobData']['minutes'] = newMinutes
-        replyText = 'Okay, die Ausführung der Erinnerung erfolgt ' + replyTextMin + '.'
+        context.user_data['newJobData']['schedule']['minutes'] = newMinutes
+        replyText = 'Okay, die Ausführung der Erinnerung erfolgt immer ' + replyTextMin + '.'
     elif context.user_data['currentMinutes'] != newMinutes:
         context.user_data['jobEdits']['minutes'] = newMinutes
-        replyText = 'Okay, die Erinnerung wird jetzt ' + replyTextMin + ' ausgeführt.'
+        replyText = 'Okay, die Erinnerung wird jetzt immter ' + replyTextMin + ' ausgeführt.'
     else:
-        replyText = 'Okay, die Erinnerung wird weiter ' + replyTextMin + ' ausgeführt.'
+        replyText = 'Okay, die Erinnerung wird weiter immer ' + replyTextMin + ' ausgeführt.'
+
+    replyText_curr, replyText_q = getTitleQuery(update, context)
+
+    if context.user_data['editType'] == 'new':
+        replyText = replyText + '\n' + replyText_q
+    else:
+        replyText = replyText + '\n' + replyText_curr + '\n' + replyText_q
+    await query.answer()
+    await query.edit_message_text(text=replyText)
+    return CONFIRM
 
 
 async def enterMin(update, context):
@@ -637,7 +669,7 @@ async def readMin_enterTitle(update, context):
     context.user_data['newMinutes'] = newMinutes
 
     if context.user_data['editType'] == 'new':
-        context.user_data['newJobData']['hours'] = newMinutes
+        context.user_data['newJobData']['schedule']['minutes'] = newMinutes
         replyText = 'Okay, die Ausführung der Erinnerung erfolgt zu den Minuten ' + newMinutesStr + '.'
     elif context.user_data['currentMinutes'] != newMinutes:
         context.user_data['jobEdits']['minutes'] = newMinutes
@@ -645,13 +677,71 @@ async def readMin_enterTitle(update, context):
     else:
         replyText = 'Okay, die Erinnerung wird weiter zu den Minuten ' + newMinutesStr + ' ausgeführt.'
 
+    replyText_curr, replyText_q = getTitleQuery(update, context)
+    if context.user_data['editType'] == 'new':
+        replyText = replyText + '\n' + replyText_q
+    else:
+        replyText = replyText + '\n' + replyText_curr + '\n' + replyText_q
+    await update.message.reply_text(replyText)
+    return CONFIRM
 
 async def confirmJob(update, context):
-    title = update.message.text
+    newTitle = update.message.text
+    context.user_data['newTitle'] = newTitle
+
+    if context.user_data['editType'] == 'new':
+        context.user_data['newJobData']['title'] = newTitle
+        replyText = 'Alles klar, der Titel "' + newTitle + '" wird übernommen.'
+    elif context.user_data['currentTitle'] != newTitle:
+        context.user_data['jobEdits']['title'] = newTitle
+        replyText = 'Okay, der Titel wird zu "' + newTitle + '" geändert.'
+    else:
+        replyText = 'Okay, der Titel bleibt "' + newTitle + '".'
+
+    if context.user_data['editType'] == 'new':
+        jobText = jobData2Str(context.user_data['newJobData'])
+        replyText = (replyText + '\n\n' + 'Die neue Erinnerung hat die folgenden Daten:' +
+                     jobText + '\n' + 'Soll diese Erinnerung gespeichert werden?')
+    else:
+        oldJob = context.user_data['selectedJob']
+        oldJob['schedule'] = oldJob['cronData']['job']['schedule']
+        newJob = oldJob
+        jobEdits = context.user_data['jobEdits']
+        for field in jobEdits:
+            if field in oldJob['schedule']:
+                newJob['schedule'][field] = jobEdits[field]
+            else:
+                newJob[field] = jobEdits[field]
+
+        jobTextOld = jobData2Str(oldJob)
+        jobTextNew = jobData2Str(newJob)
+        replyText = (replyText + '\n\n' + 'Die alte Erinnerung hat die folgenden Daten:' +
+                     jobTextOld + '\n' 'Die neue Erinnerung hat die folgenden Daten:' +
+                     jobTextNew + '\n' + 'Soll diese Erinnerung gespeichert werden?')
+
+    keyboard = [[InlineKeyboardButton("Speichern", callback_data=str(CNFRM_EDIT))],
+                [InlineKeyboardButton("Abbrechen", callback_data=str(ABORT))]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await update.message.reply_text(replyText, reply_markup=reply_markup)
+    return SAVE
+
+def jobData2Str(jobDict):
+    typeDict = {'bike': 'Fahrradvorhersage', 'weather': 'Wettervorhersage'}
+    scheduleStr = scheduleDict2Str(jobDict['schedule'])
+    jobStr = ('Titel: ' + jobDict['title'] + '\n' +
+              'Typ: ' + typeDict[jobDict['jobType']] + '\n' +
+              'Adresse: ' + jobDict['addressData']['address'] + '\n' +
+              'Zeitplan: ' + scheduleStr)
+    return jobStr
 
 
 async def saveEdit(update, context):
-    t=0
+    query = update.callback_query
+    replyText = ('Speichern muss ich dummerweise noch lernen...')
+    await query.answer()
+    await query.edit_message_text(text=replyText)
+    return ConversationHandler.END
 
 
 async def error_input(update, context):

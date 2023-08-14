@@ -19,18 +19,18 @@ DBCONNCTSTR = os.environ["DBCONNCTSTR"]
 # updateUserCronJobs
 
 
-async def getClientDB():
+def getClientDB():
     client = MongoClient(DBCONNCTSTR)
     try:
         client.server_info()
     except ConnectionFailure:
         print('MongoDB connection failure')
     db = client.gbweatherbot
-    await ensureIndexSetup(db)
+    ensureIndexSetup(db)
     return client, db
 
 
-async def ensureIndexSetup(db):
+def ensureIndexSetup(db):
     # users collection
     try:
         indexesData = db.users.getIndexes()

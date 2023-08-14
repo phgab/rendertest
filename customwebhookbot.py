@@ -80,7 +80,7 @@ WEBHOOK_HOST = os.environ['TELE_BOT_URL']
 ADMIN_ID = os.environ['ADMINCHAT']
 
 # active users dictionary
-dbClient, globalDB_var = await getClientDB()
+dbClient, globalDB_var = getClientDB()
 
 
 @dataclass

@@ -34,7 +34,7 @@ def getConvHandlerCron():
         entry_points=[CommandHandler("erinnerungen", cronFirstLayer)],
         states={
             SELECT: [CallbackQueryHandler(selectJob, pattern='^(?!.*' + str(L1_NEW) + ').*$'),  # everything except
-                     CallbackQueryHandler(selectJobType, pattern='^' + str(L1_NEW) + '$')],
+                     CallbackQueryHandler(startNewJob, pattern='^' + str(L1_NEW) + '$')],
             DETAILS: [CallbackQueryHandler(showJobDetails)],
             TOGGLE: [CallbackQueryHandler(toggleJob)],
             DELETE: [CallbackQueryHandler(deleteJob)],
@@ -260,12 +260,16 @@ async def saveDeletion(update, context):
     return ConversationHandler.END
 
 
+async def startNewJob(update, context):
+    context.user_data['editType'] = 'new'
+    returnVal = await selectJobType(update, context)
+    return returnVal
+
 async def selectJobType(update, context):
     query = update.callback_query
     qData = query.data
     # Create new job
-    if 'editType' not in context.user_data:
-        context.user_data['editType'] = 'new'
+    if context.user_data['editType'] == 'new':
         context.user_data['newJobData'] = {}
         replyText = 'Bitte Erinnerungs-Art wählen.'
     # Edit job

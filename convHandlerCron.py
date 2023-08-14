@@ -7,14 +7,14 @@ from emoji import emojize
 
 (SELECT, DETAILS, TOGGLE, DELETE,
  TYPE, ADDRESS, SCH_WDAYS, SCH_HOURS, SCH_MIN,
- TITLE, CONFIRM, SAVE, ERROR) = range(12)
+ TITLE, CONFIRM, SAVE, ERROR) = range(13)
 (L1_NEW, L1_SHOW, L1_EDIT, L1_TOGGLE, L1_DELETE,
  CNFRM_EDIT, CNFRM_DEL, ABORT, BACK, LIST_SEL, MANUAL_SEL,
  TYPE_BIKE, TYPE_WEATHER,
  WD_WEEK, WD_WE, WD_ALL,
  MIN_0, MIN_15, MIN_30, MIN_45,
  ERR_INPUT
- ) = range(20)
+ ) = range(21)
 
 
 # 1. a. Erinnerung hinzufügen, b. Meine Erinnerungen anzeigen, c. Erinnerungen bearbeiten, d. Erinnerungen aktivieren/deaktivieren, e. Erinnerung löschen

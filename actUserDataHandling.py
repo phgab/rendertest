@@ -6,7 +6,7 @@ import json
 import urllib.parse
 from typing import Any, Dict, TypeVar
 KeyType = TypeVar('KeyType')
-cronFolderID = int(os.environ['CRON_FOLDER_ID'])
+# cronFolderID = int(os.environ['CRON_FOLDER_ID'])
 
 
 async def AUD_addUserData(db, actUserData, chatId, **dataEntries):
@@ -63,7 +63,7 @@ async def AUD_addUserCronJobData(db, chatId, jobType, addressData, title, schedu
                    'job': {
                        'url': url,
                        'enabled': True,
-                       'folderId': cronFolderID,
+                       'folderId': 6811,
                        'title': cronTitle,
                        'saveResponses': False,
                        'schedule': schedule

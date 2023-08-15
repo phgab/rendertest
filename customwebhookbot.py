@@ -216,6 +216,9 @@ async def main() -> None:
         the required parameters were passed correctly.
         """
         try:
+            qParams = dict(request.query_params)
+            if 'chat_id' in qParams:
+                print('chat_id found')
             chat_id = int(request.query_params["chat_id"])
             reminderType = request.query_params["reminderType"]
             road = request.query_params["road"]

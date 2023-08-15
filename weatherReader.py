@@ -72,6 +72,37 @@ def getPlace(coord):
     return coord
 
 
+def getAddressFromCoord(coord):
+    url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat={}&lon={}'.format(
+        coord["lat"], coord["lon"])
+
+    response = requests.get(url).json()
+    if "address" in response:
+        address = response["address"]
+        if 'country' in address:
+            country = address['country']
+            if 'city' in address:
+                city = address['city']
+                if 'postcode' in address:
+                    postcode = address['postcode']
+                    if 'road' in address and 'house_number' in address:
+                        road = address['road']
+                        house_number = address['house_number']
+                        addressText = road + ' ' + house_number + ', ' + postcode + ' ' + city + ', ' + country
+                    else:
+                        addressText = postcode + ' ' + city + ', ' + country
+                else:
+                    addressText = city + ', ' + country
+            else:
+                addressText = 'Unknown location, ' + country
+        else:
+            addressText = 'No Address found.'
+    else:
+        addressText = "No location found"
+
+    return addressText
+
+
 def findLatLon(address):
     url = 'https://nominatim.openstreetmap.org/search?q=' + \
           urllib.parse.quote(address) + '&format=json'

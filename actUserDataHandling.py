@@ -1,9 +1,13 @@
 from gbMongoDB import getUserData, createUserEntry, updateUserEntry
 from gbCronJobs import createJob, updateJob, deleteJob
-import os.path
+import os
 import pickle
+import json
+import urllib.parse
 from typing import Any, Dict, TypeVar
 KeyType = TypeVar('KeyType')
+cronFolderID = int(os.environ['CRON_FOLDER_ID'])
+
 
 async def AUD_addUserData(db, actUserData, chatId, **dataEntries):
     userData = await getUserData(db, chatId)
@@ -23,6 +27,7 @@ async def AUD_addUserData(db, actUserData, chatId, **dataEntries):
     saveUserDataPickle(actUserData)
     return actUserData
 
+
 async def AUD_updateUserAddressData(db, chatId, addressType, newDict):
     actUserDataStored = getUserDataPickle()
     userData = actUserDataStored[chatId]
@@ -39,7 +44,8 @@ async def AUD_updateUserAddressData(db, chatId, addressType, newDict):
     actUserDataNew[chatId] = userData
     saveUserDataPickle(actUserDataNew)
 
-async def AUD_addUserCronJobData(db, chatId, jobType, addressData, enabled, title, schedule):
+
+async def AUD_addUserCronJobData(db, chatId, jobType, addressData, title, schedule):
     actUserDataStored = getUserDataPickle()
     userData = actUserDataStored[chatId]
     if 'cronJobs' in userData:
@@ -48,13 +54,14 @@ async def AUD_addUserCronJobData(db, chatId, jobType, addressData, enabled, titl
         allJobs = []
     jobNum = len(allJobs)
     cronTitle = str(chatId) + '-' + str(jobNum).zfill(3)
-    url = getJobURL(chatId, jobType, addressData)
-    jobId = await createJob(url, enabled, cronTitle, schedule)
+    url = getJobURL(chatId, jobType, 'coord', addressData['coord'])
+    jobId = await createJob(url, True, cronTitle, schedule)
     jobDict = {'cronID': jobId, 'title': title, 'jobType': jobType, 'addressData': addressData,
                'cronData': {
                    'job': {
                        'url': url,
-                       'enabled': enabled,
+                       'enabled': True,
+                       'folderId': cronFolderID,
                        'title': cronTitle,
                        'saveResponses': False,
                        'schedule': schedule
@@ -68,9 +75,20 @@ async def AUD_addUserCronJobData(db, chatId, jobType, addressData, enabled, titl
     saveUserDataPickle(actUserDataNew)
     return jobNum
 
-def getJobURL(chatId, jobType, address):
-    jobURL = ''
-    return jobURL
+
+def getJobURL(chatId, jobType, addressType, addressData):
+    app_url_link = os.environ['APP_URL_LINK']
+    if addressType == 'coord':
+        addressData = json.dumps(addressData)
+    paramsSubstring = urllib.parse.urlencode(
+        {'chat_id': str(chatId),
+         'reminderType': jobType,
+         addressType: addressData})
+    url_extension = '/activatereminder?'
+
+    url = urllib.parse.quote_plus(app_url_link + url_extension + paramsSubstring)
+    return url
+
 
 async def AUD_updateUserCronJobData(db, chatId, jobNum, **dataEntries):
     actUserDataStored = getUserDataPickle()
@@ -90,6 +108,7 @@ async def AUD_updateUserCronJobData(db, chatId, jobNum, **dataEntries):
     saveUserDataPickle(actUserDataNew)
     return allJobs
 
+
 async def AUD_deleteUserCronJobData(db, chatId, jobNum):
     actUserDataStored = getUserDataPickle()
     allJobs = actUserDataStored[chatId]['cronJobs']
@@ -104,8 +123,11 @@ async def AUD_deleteUserCronJobData(db, chatId, jobNum):
     saveUserDataPickle(actUserDataNew)
     return allJobs
 
+
 def saveUserDataPickle(actUserData):
     pickle.dump(actUserData, open("actUserData", "wb"))
+
+
 def getUserDataPickle():
     if os.path.isfile("actUserData"):
         actUserData = pickle.load(open("actUserData", "rb"))
@@ -113,9 +135,11 @@ def getUserDataPickle():
         actUserData = {}
     return actUserData
 
+
 def loadSingleUserData(chatId):
     actUserData = getUserDataPickle()
     return actUserData[chatId]
+
 
 def listUserAddresses(chatId):
     userData = loadSingleUserData(chatId)
@@ -125,6 +149,7 @@ def listUserAddresses(chatId):
         addressData = []
     return addressData
 
+
 def listUserCronJobs(chatId):
     userData = loadSingleUserData(chatId)
     if 'cronJobs' in userData:
@@ -132,6 +157,7 @@ def listUserCronJobs(chatId):
     else:
         cronData = []
     return cronData
+
 
 def getChatId(update, context):
     chat_id = -1
@@ -142,6 +168,7 @@ def getChatId(update, context):
         # from a callback message
         chat_id = str(update.callback_query.message.chat.id)
     return chat_id
+
 
 def deep_update_pydantic(mapping: Dict[KeyType, Any], *updating_mappings: Dict[KeyType, Any]) -> Dict[KeyType, Any]:
     updated_mapping = mapping.copy()

@@ -2,7 +2,7 @@ import asyncio
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, MessageHandler, filters, CallbackQueryHandler, ConversationHandler
 from actUserDataHandling import listUserAddresses, listUserCronJobs, AUD_updateUserAddressData, getChatId, AUD_addUserCronJobData, AUD_updateUserCronJobData, AUD_deleteUserCronJobData
-from weatherReader import findLatLon
+from weatherReader import findLatLon, getAddressFromCoord, getPlace, getTimeLatLon
 from emoji import emojize
 
 (SELECT, DETAILS, TOGGLE, DELETE,
@@ -17,16 +17,7 @@ from emoji import emojize
  ) = range(21)
 
 
-# 1. a. Erinnerung hinzufügen, b. Meine Erinnerungen anzeigen, c. Erinnerungen bearbeiten, d. Erinnerungen aktivieren/deaktivieren, e. Erinnerung löschen
-# a.: Iteration durch alle notwendigen Felder
-#     TD: Implementierung als conv handler
-# b-e.: jeweils 1 Button mit Titel
-#      TD: Implementierung als dieselbe Funktion, Überfunktion wird in context gespeichert
-# b.: bei Klick werden Details angezeigt
-# c.: Bei Klick Buttons mit den jeweiligen bearbeitbaren / zu erstellenden Feldern
-# e.: are you sure?
 # todo: vllt durch context vars integrieren, dass auch einzelne Felder bearbeitet werden können, mit
-# a. ['editSingle'] und b. ['editEntered'] um die jeweils zweite Funktion dann wieder zu verlassen
 
 
 def getConvHandlerCron():
@@ -42,10 +33,11 @@ def getConvHandlerCron():
             TYPE: [CallbackQueryHandler(selectJobType)],
             ADDRESS: [CallbackQueryHandler(selectAddressMethod, pattern=('^' + str(TYPE_BIKE) + '|' +
                                                                             str(TYPE_WEATHER) + '$')),
-                         CallbackQueryHandler(selectAddress, pattern='^' + str(LIST_SEL) + '$'),
-                         CallbackQueryHandler(enterAddress, pattern='^' + str(MANUAL_SEL) + '$')],
+                      CallbackQueryHandler(selectAddress, pattern='^' + str(LIST_SEL) + '$'),
+                      CallbackQueryHandler(enterAddress, pattern='^' + str(MANUAL_SEL) + '$')],
             SCH_WDAYS: [CallbackQueryHandler(selectWDays),
-                        MessageHandler(filters.TEXT & (~ filters.COMMAND), readAddress_selectWDays)],
+                        MessageHandler(filters.TEXT & (~ filters.COMMAND), readAddressText_selectWDays),
+                        MessageHandler(filters.LOCATION & (~ filters.COMMAND), readAddressLoc_selectWDays)],
             SCH_HOURS: [CallbackQueryHandler(enterHours, pattern='^(?!.*' + str(MANUAL_SEL) + ').*$'),
                         CallbackQueryHandler(enterWDays, pattern='^' + str(MANUAL_SEL) + '$'),
                         MessageHandler(filters.TEXT & (~ filters.COMMAND), readWDays_enterHours)],
@@ -140,7 +132,7 @@ def scheduleDict2Str(scheduleDict):
             wDaysStr = 'Täglich'
         elif sorted(wdays) == list(range(1, 6)):
             wDaysStr = 'An Wochentagen'
-        elif sorted(wdays) == [5, 6]:
+        elif sorted(wdays) == [0, 6]:
             wDaysStr = 'An Wochenendstagen'
         else:
             wDaysList = ['Sonntags', 'Montags', 'Dienstags', 'Mittwochs',
@@ -276,6 +268,7 @@ async def selectJobType(update, context):
     else:
         jobNum = int(qData)
         selectedJob = context.user_data['cronJobs'][jobNum]
+        context.user_data['selectedJobNum'] = jobNum
         context.user_data['selectedJob'] = selectedJob
         context.user_data['jobEdits'] = {}
 
@@ -365,7 +358,8 @@ async def enterAddress(update, context):
         replyText = 'Derzeitige Adresse:\n ' + adr['address'] + '\n'
     else:
         replyText = ''
-    replyText = replyText + 'Bitte die gewünschte Adresse inkl. PLZ und Ort senden.'
+    replyText = (replyText + 'Bitte die gewünschte Adresse inkl. PLZ und Ort als Nachricht senden oder den ' +
+                 'Standort teilen (Büroklammer -> Standort).')
     await query.answer()
     await query.edit_message_text(text=replyText)
     return SCH_WDAYS
@@ -413,19 +407,35 @@ async def selectWDays(update, context):
     return SCH_HOURS
 
 
-async def readAddress_selectWDays(update, context):
+async def readAddressText_selectWDays(update, context):
     address = update.message.text
-    selectedType = context.user_data['selectedType']
-    typeStrTxt = context.user_data['typeStrTxt']
     coord = findLatLon(address)
     addressData = {'address': address, 'coord': coord}
 
+    returnVal = await readAddress_selectWDays(update, context, addressData)
+    return returnVal
+
+
+async def readAddressLoc_selectWDays(update, context):
+    user_location = update.message.location
+    lat = user_location.latitude
+    lon = user_location.longitude
+    coord = {"lat": lat, "lon": lon}
+    coord = getPlace(coord)
+    coord = getTimeLatLon(coord)
+    addressText = getAddressFromCoord(coord)
+    addressData = {'address': addressText, 'coord': coord}
+
+    returnVal = await readAddress_selectWDays(update, context, addressData)
+    return returnVal
+
+async def readAddress_selectWDays(update, context, addressData):
     if context.user_data['editType'] == 'new':
         context.user_data['newJobData']['addressData'] = addressData
     else:
         context.user_data['jobEdits']['addressData'] = addressData
 
-    replyText = 'Die Erinnerung wird für die Adresse "' + address + '" in ' + coord['place'] + ' erstellt.\n'
+    replyText = 'Die Erinnerung wird für die Adresse "' + addressData['address'] + '" in ' + addressData['coord']['place'] + ' erstellt.\n'
 
     reply_markup, replyText_curr, replyText_q = getWDayQuery(update, context)
     if context.user_data['editType'] == 'new':
@@ -715,8 +725,8 @@ async def confirmJob(update, context):
 
         jobTextOld = jobData2Str(oldJob)
         jobTextNew = jobData2Str(newJob)
-        replyText = (replyText + '\n\n' + 'Die alte Erinnerung hat die folgenden Daten:' +
-                     jobTextOld + '\n' 'Die neue Erinnerung hat die folgenden Daten:' +
+        replyText = (replyText + '\n\n' + 'Die alte Erinnerung hat die folgenden Daten: \n' +
+                     jobTextOld + '\n' 'Die neue Erinnerung hat die folgenden Daten: \n' +
                      jobTextNew + '\n' + 'Soll diese Erinnerung gespeichert werden?')
 
     keyboard = [[InlineKeyboardButton("Speichern", callback_data=str(CNFRM_EDIT))],
@@ -738,7 +748,36 @@ def jobData2Str(jobDict):
 
 async def saveEdit(update, context):
     query = update.callback_query
-    replyText = ('Speichern muss ich dummerweise noch lernen...')
+
+    globalDB_var = context.bot_data['globalDB_var']
+    chatId = context.user_data['chatId']
+
+    if context.user_data['editType'] == 'new':
+        'jobType' 'addressData' 'schedule' 'title'
+        newJob = context.user_data['newJobData']
+
+        jobNum = await AUD_addUserCronJobData(globalDB_var, chatId, newJob['jobType'], newJob['addressData'],
+                                     newJob['title'], newJob['schedule'])
+
+        replyText = 'Erinnerung Nr. ' + str(jobNum) + ' "' + newJob['title'] + '" wurde erfolgreich erstellt.'
+    else:
+        jobNum = context.user_data['selectedJobNum']
+        selectedJob = context.user_data['selectedJob']
+        jobEdits = context.user_data['jobEdits']
+        editEntries = {}
+        if any([scheduleKey in jobEdits for scheduleKey in ['wdays', 'hours', 'minutes']]):
+            editEntries['schedule'] = selectedJob['cronData']['job']['schedule']
+
+        for edit in jobEdits:
+            if edit in ['wdays', 'hours', 'minutes']:
+                editEntries['schedule'][edit] = jobEdits[edit]
+            else:
+                editEntries[edit] = jobEdits[edit]
+
+        await AUD_updateUserCronJobData(globalDB_var, chatId, jobNum, **editEntries)
+
+        replyText = 'Erinnerung Nr. ' + str(jobNum) + ' "' + selectedJob['title'] + '" wurde erfolgreich bearbeitet.'
+
     await query.answer()
     await query.edit_message_text(text=replyText)
     return ConversationHandler.END

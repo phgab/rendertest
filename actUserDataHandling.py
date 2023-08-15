@@ -63,7 +63,7 @@ async def AUD_addUserCronJobData(db, chatId, jobType, addressData, title, schedu
                    'job': {
                        'url': url,
                        'enabled': True,
-                       'folderId': 6811,
+                       'folderId': 1,
                        'title': cronTitle,
                        'saveResponses': False,
                        'schedule': schedule

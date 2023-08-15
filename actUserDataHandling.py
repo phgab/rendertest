@@ -96,7 +96,7 @@ async def AUD_updateUserCronJobData(db, chatId, jobNum, **dataEntries):
     actUserDataStored = getUserDataPickle()
     allJobs = actUserDataStored[chatId]['cronJobs']
     jobDict = allJobs[jobNum]
-    jobId = jobDict[jobNum]['jobId']
+    jobId = jobDict[jobNum]['cronID']
     for dataKey, dataEntry in dataEntries.items():
         if dataKey in jobDict['cronData']['job']:
             jobDict['cronData']['job'][dataKey] = dataEntry
@@ -114,7 +114,7 @@ async def AUD_updateUserCronJobData(db, chatId, jobNum, **dataEntries):
 async def AUD_deleteUserCronJobData(db, chatId, jobNum):
     actUserDataStored = getUserDataPickle()
     allJobs = actUserDataStored[chatId]['cronJobs']
-    jobId = allJobs[jobNum]['jobId']
+    jobId = allJobs[jobNum]['cronID']
 
     del allJobs[jobNum]
     await deleteJob(jobId)

@@ -4,6 +4,7 @@ import requests
 
 ENDPOINT = 'https://api.cron-job.org'
 CRON_JOB_KEY = os.environ["CRON_JOB_KEY"]
+cronFolderID = int(os.environ['CRON_FOLDER_ID'])
 
 headers = {
     'Authorization': 'Bearer ' + CRON_JOB_KEY,
@@ -25,6 +26,7 @@ async def createJob(url, enabled, title, schedule): #folder?
             'url': url,
             'enabled': enabled,
             'title': title,
+            'folderId': cronFolderID,
             'saveResponses': False,
             'schedule': schedule
         }

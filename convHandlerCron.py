@@ -767,7 +767,7 @@ async def saveEdit(update, context):
         jobNum = await AUD_addUserCronJobData(globalDB_var, chatId, newJob['jobType'], newJob['addressData'],
                                               newJob['title'], newJob['schedule'])
 
-        replyText = 'Erinnerung Nr. ' + str(jobNum) + ' "' + newJob['title'] + '" wurde erfolgreich erstellt.'
+        replyText = 'Erinnerung Nr. ' + str(jobNum + 1) + ' "' + newJob['title'] + '" wurde erfolgreich erstellt.'
     else:
         jobNum = context.user_data['selectedJobNum']
         selectedJob = context.user_data['selectedJob']
@@ -784,7 +784,7 @@ async def saveEdit(update, context):
 
         await AUD_updateUserCronJobData(globalDB_var, chatId, jobNum, **editEntries)
 
-        replyText = 'Erinnerung Nr. ' + str(jobNum) + ' "' + selectedJob['title'] + '" wurde erfolgreich bearbeitet.'
+        replyText = 'Erinnerung Nr. ' + str(jobNum + 1) + ' "' + selectedJob['title'] + '" wurde erfolgreich bearbeitet.'
 
     await query.answer()
     await query.edit_message_text(text=replyText)

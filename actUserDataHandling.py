@@ -54,6 +54,8 @@ async def AUD_addUserCronJobData(db, chatId, jobType, addressData, title, schedu
         allJobs = []
     jobNum = len(allJobs)
     cronTitle = str(chatId) + '-' + str(jobNum).zfill(3)
+    schedule['mdays'] = [-1]
+    schedule['months'] = [-1]
     url = getJobURL(chatId, jobType, 'coord', addressData['coord'])
     jobId = await createJob(url, True, cronTitle, schedule)
     jobDict = {'cronID': jobId, 'title': title, 'jobType': jobType, 'addressData': addressData,

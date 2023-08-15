@@ -110,6 +110,7 @@ async def showJobDetails(update, context):
     query = update.callback_query
     qData = query.data
     jobNum = int(qData)
+    context.user_data['selectedJobNum'] = jobNum
     cronJobs = context.user_data['cronJobs']
     cronJob = cronJobs[jobNum]
     jobNumStr = str(jobNum + 1)
@@ -204,12 +205,13 @@ async def toggleJob(update, context):
     globalDB_var = context.bot_data['globalDB_var']
     chatId = context.user_data['chatId']
     jobNum = int(qData)
+    context.user_data['selectedJobNum'] = jobNum
     jobTitle = context.user_data['cronJobs'][jobNum]['title']
     enabled = context.user_data['cronJobs'][jobNum]['cronData']['job']['enabled']
 
     cronJobs = await AUD_updateUserCronJobData(globalDB_var, chatId, jobNum, enabled=not enabled)
     context.user_data['cronJobs'] = cronJobs
-    toggleStr = 'Erinnerung #' + str(jobNum) + ': ' + jobTitle
+    toggleStr = 'Erinnerung #' + str(jobNum + 1) + ': ' + jobTitle
     if enabled:
         toggleStr = toggleStr + ' erfolgreich deaktiviert.'
     else:
@@ -222,8 +224,9 @@ async def deleteJob(update, context):
     query = update.callback_query
     qData = query.data
     jobNum = int(qData)
+    context.user_data['selectedJobNum'] = jobNum
     jobTitle = context.user_data['cronJobs'][jobNum]['title']
-    replyText = ('Soll Erinnerung #' + str(jobNum) + ':\n' + jobTitle +
+    replyText = ('Soll Erinnerung #' + str(jobNum + 1) + ':\n' + jobTitle +
                  '\n wirklich gelöscht werden?')
 
     keyboard = [[InlineKeyboardButton("Ja", callback_data=str(CNFRM_DEL))],
@@ -237,16 +240,15 @@ async def deleteJob(update, context):
 
 async def saveDeletion(update, context):
     query = update.callback_query
-    qData = query.data
     globalDB_var = context.bot_data['globalDB_var']
     chatId = context.user_data['chatId']
-    jobNum = int(qData)
+    jobNum = context.user_data['selectedJobNum']
     jobTitle = context.user_data['cronJobs'][jobNum]['title']
 
     cronJobs = await AUD_deleteUserCronJobData(globalDB_var, chatId, jobNum)
 
     context.user_data['cronJobs'] = cronJobs
-    deleteStr = 'Erinnerung #' + str(jobNum) + ': ' + jobTitle + ' erfolgreich gelöscht.'
+    deleteStr = 'Erinnerung #' + str(jobNum + 1) + ': ' + jobTitle + ' erfolgreich gelöscht.'
 
     await query.edit_message_text(deleteStr)
     return ConversationHandler.END

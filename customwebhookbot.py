@@ -217,17 +217,29 @@ async def main() -> None:
         """
         try:
             qParams = dict(request.query_params)
-            if 'chat_id' in qParams:
-                print('chat_id found')
-            chat_id = int(request.query_params["chat_id"])
-            reminderType = request.query_params["reminderType"]
-            road = request.query_params["road"]
-            housenr = request.query_params["housenr"]
-            city = request.query_params["city"]
-        except KeyError:
+            chat_id = int(qParams["chat_id"])
+            reminderType = qParams["reminderType"]
+            if 'coord' in qParams:
+                addressType = 'coord'
+                addressData = json.loads(qParams["coord"])
+            elif 'address' in qParams:
+                addressType = 'address'
+                addressData = qParams["address"]
+            elif 'road' in qParams and 'housenr' in qParams and 'city' in qParams:
+                addressType = 'address'
+                road = request.query_params["road"]
+                housenr = request.query_params["housenr"]
+                city = request.query_params["city"]
+                addressData = road + " " + housenr + ", " + city
+            else:
+                return PlainTextResponse(
+                    status_code=HTTPStatus.BAD_REQUEST,
+                    content='Please enter address as "coord", "address" or "road, housenr, city".',
+                )
+        except KeyError as err:
             return PlainTextResponse(
                 status_code=HTTPStatus.BAD_REQUEST,
-                content="Please pass both `user_id` and `payload` as query parameters.",
+                content='Required key "' + str(err.args[0]) + '" not found.',
             )
         except ValueError:
             return PlainTextResponse(
@@ -236,11 +248,11 @@ async def main() -> None:
             )
         bot = application.bot
         if reminderType == "rain":
-            returnStr, fileName, errorCode = returnMinutely({"address": road + " " + housenr + ", " + city})
+            returnStr, fileName, errorCode = returnMinutely({addressType: addressData})
             await bot.sendPhoto(chat_id, open(fileName + ".jpg", 'rb'))
             await bot.sendMessage(chat_id, returnStr)
         elif reminderType == "weather":
-            returnStr, [fileNameMin, fileNameHrl], errorCode = returnMinutelyHourly({"address": road + " " + housenr + ", " + city})
+            returnStr, [fileNameMin, fileNameHrl], errorCode = returnMinutelyHourly({addressType: addressData})
             await bot.sendPhoto(chat_id, open(fileNameHrl + ".jpg", 'rb'))
             await bot.sendPhoto(chat_id, open(fileNameMin + ".jpg", 'rb'))
             await bot.sendMessage(chat_id, returnStr)

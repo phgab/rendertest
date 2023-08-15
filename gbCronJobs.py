@@ -40,12 +40,8 @@ async def updateJob(jobId, field, value):
             field: value
         }
     }
-    result = requests.patch(ENDPOINT + '/jobs/' + str(jobId), headers=headers, data=json.dumps(payload))  #), proxies=proxies)
-    resultjsn = result.json()
-    return resultjsn['jobId']
+    requests.patch(ENDPOINT + '/jobs/' + str(jobId), headers=headers, data=json.dumps(payload))  #), proxies=proxies)
 
 
 async def deleteJob(jobId):
-    result = requests.delete(ENDPOINT + '/jobs/' + str(jobId), headers=headers)  #), proxies=proxies)
-    resultjsn = result.json()
-    return resultjsn['jobId']
+    requests.delete(ENDPOINT + '/jobs/' + str(jobId), headers=headers)  #), proxies=proxies)

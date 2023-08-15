@@ -1,7 +1,8 @@
 import asyncio
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, MessageHandler, filters, CallbackQueryHandler, ConversationHandler
-from actUserDataHandling import listUserAddresses, listUserCronJobs, AUD_updateUserAddressData, getChatId, AUD_addUserCronJobData, AUD_updateUserCronJobData, AUD_deleteUserCronJobData
+from actUserDataHandling import listUserAddresses, listUserCronJobs, AUD_updateUserAddressData, getChatId, \
+    AUD_addUserCronJobData, AUD_updateUserCronJobData, AUD_deleteUserCronJobData
 from weatherReader import findLatLon, getAddressFromCoord, getPlace, getTimeLatLon
 from emoji import emojize
 
@@ -32,7 +33,7 @@ def getConvHandlerCron():
             # new/edit steps
             TYPE: [CallbackQueryHandler(selectJobType)],
             ADDRESS: [CallbackQueryHandler(selectAddressMethod, pattern=('^' + str(TYPE_BIKE) + '|' +
-                                                                            str(TYPE_WEATHER) + '$')),
+                                                                         str(TYPE_WEATHER) + '$')),
                       CallbackQueryHandler(selectAddress, pattern='^' + str(LIST_SEL) + '$'),
                       CallbackQueryHandler(enterAddress, pattern='^' + str(MANUAL_SEL) + '$')],
             SCH_WDAYS: [CallbackQueryHandler(selectWDays),
@@ -48,20 +49,19 @@ def getConvHandlerCron():
             CONFIRM: [MessageHandler(filters.TEXT & (~ filters.COMMAND), confirmJob)],
             SAVE: [CallbackQueryHandler(saveEdit, pattern='^' + str(CNFRM_EDIT) + '$'),
                    CallbackQueryHandler(saveDeletion, pattern='^' + str(CNFRM_DEL) + '$'),
-                   CallbackQueryHandler(cancel, pattern='^' + str(ABORT) + '$')],
+                   CallbackQueryHandler(cancel_query, pattern='^' + str(ABORT) + '$')],
             ERROR: [CallbackQueryHandler(error_input, pattern='^' + str(ERR_INPUT) + '$')]
-            },
-        fallbacks=[CommandHandler('cancel', cancel)]
+        },
+        fallbacks=[CommandHandler('cancel', cancel_cmd)]
     )
     return convHandlerCron
 
 
 async def cronFirstLayer(update, context):
-    if 'chatId' not in context.user_data:
-        chatId = getChatId(update, context)
-        context.user_data['chatId'] = chatId
-        context.user_data['cronJobs'] = listUserCronJobs(chatId)
-        context.user_data['addresses'] = listUserAddresses(chatId)
+    chatId = getChatId(update, context)
+    context.user_data['chatId'] = chatId
+    context.user_data['cronJobs'] = listUserCronJobs(chatId)
+    context.user_data['addresses'] = listUserAddresses(chatId)
     keyboard = [[InlineKeyboardButton("Erinnerung hinzufügen", callback_data=str(L1_NEW))],
                 [InlineKeyboardButton("Meine Erinnerungen anzeigen", callback_data=str(L1_SHOW))],
                 [InlineKeyboardButton("Erinnerungen bearbeiten", callback_data=str(L1_EDIT))],
@@ -257,6 +257,7 @@ async def startNewJob(update, context):
     returnVal = await selectJobType(update, context)
     return returnVal
 
+
 async def selectJobType(update, context):
     query = update.callback_query
     qData = query.data
@@ -429,13 +430,15 @@ async def readAddressLoc_selectWDays(update, context):
     returnVal = await readAddress_selectWDays(update, context, addressData)
     return returnVal
 
+
 async def readAddress_selectWDays(update, context, addressData):
     if context.user_data['editType'] == 'new':
         context.user_data['newJobData']['addressData'] = addressData
     else:
         context.user_data['jobEdits']['addressData'] = addressData
 
-    replyText = 'Die Erinnerung wird für die Adresse "' + addressData['address'] + '" in ' + addressData['coord']['place'] + ' erstellt.\n'
+    replyText = 'Die Erinnerung wird für die Adresse "' + addressData['address'] + '" in ' + addressData['coord'][
+        'place'] + ' erstellt.\n'
 
     reply_markup, replyText_curr, replyText_q = getWDayQuery(update, context)
     if context.user_data['editType'] == 'new':
@@ -511,6 +514,7 @@ async def readWDays_enterHours(update, context):
     await update.message.reply_text(replyText)
     return SCH_MIN
 
+
 async def enterHours(update, context):
     query = update.callback_query
     qData = query.data
@@ -520,7 +524,7 @@ async def enterHours(update, context):
     elif qData == str(WD_WE):
         newWDays = [6, 0]
         replyTextWD = 'an Wochenendtagen'
-    else: # all days
+    else:  # all days
         newWDays = list(range(7))
         replyTextWD = 'täglich'
 
@@ -661,6 +665,7 @@ async def enterMin(update, context):
     await query.edit_message_text(text=replyText)
     return TITLE
 
+
 async def readMin_enterTitle(update, context):
     minutesMsg = update.message.text
     minutesList = minutesMsg.split(',')
@@ -670,8 +675,9 @@ async def readMin_enterTitle(update, context):
         if -1 < minute < 60:
             newMinutes.append(minute)
         else:
-            replyText = ('"' + minuteStr + '" konnte nicht richtig gelesen werden. Bitte die gewünschten Minuten noch ' +
-                         ' einmal korrekt kommagetrennt eingeben.')
+            replyText = (
+                        '"' + minuteStr + '" konnte nicht richtig gelesen werden. Bitte die gewünschten Minuten noch ' +
+                        ' einmal korrekt kommagetrennt eingeben.')
             await update.message.reply_text(replyText)
             return TITLE
 
@@ -695,6 +701,7 @@ async def readMin_enterTitle(update, context):
     await update.message.reply_text(replyText)
     return CONFIRM
 
+
 async def confirmJob(update, context):
     newTitle = update.message.text
     context.user_data['newTitle'] = newTitle
@@ -710,7 +717,7 @@ async def confirmJob(update, context):
 
     if context.user_data['editType'] == 'new':
         jobText = jobData2Str(context.user_data['newJobData'])
-        replyText = (replyText + '\n\n' + 'Die neue Erinnerung hat die folgenden Daten:' +
+        replyText = (replyText + '\n\n' + 'Die neue Erinnerung hat die folgenden Daten: \n' +
                      jobText + '\n' + 'Soll diese Erinnerung gespeichert werden?')
     else:
         oldJob = context.user_data['selectedJob']
@@ -736,6 +743,7 @@ async def confirmJob(update, context):
     await update.message.reply_text(replyText, reply_markup=reply_markup)
     return SAVE
 
+
 def jobData2Str(jobDict):
     typeDict = {'bike': 'Fahrradvorhersage', 'weather': 'Wettervorhersage'}
     scheduleStr = scheduleDict2Str(jobDict['schedule'])
@@ -757,7 +765,7 @@ async def saveEdit(update, context):
         newJob = context.user_data['newJobData']
 
         jobNum = await AUD_addUserCronJobData(globalDB_var, chatId, newJob['jobType'], newJob['addressData'],
-                                     newJob['title'], newJob['schedule'])
+                                              newJob['title'], newJob['schedule'])
 
         replyText = 'Erinnerung Nr. ' + str(jobNum) + ' "' + newJob['title'] + '" wurde erfolgreich erstellt.'
     else:
@@ -788,13 +796,21 @@ async def error_input(update, context):
     qData = query.data
 
 
-async def cancel(update, context):
+async def cancel_query(update, context):
+    query = update.callback_query
     # user = update.message.from_user
-    #logger.info("User %s canceled the conversation." % user.first_name)
+    # logger.info("User %s canceled the conversation." % user.first_name)
+    await query.answer()
+    await query.edit_message_text(text='Abgebrochen')
+    return ConversationHandler.END
+
+
+async def cancel_cmd(update, context):
+    # user = update.message.from_user
+    # logger.info("User %s canceled the conversation." % user.first_name)
     await update.message.reply_text('Abgebrochen')
 
     return ConversationHandler.END
-
 
 # def getSecondLayerKeyboard():
 #     keyboard = [[InlineKeyboardButton("Adresse hinzufügen", callback_data=str(C2A))],

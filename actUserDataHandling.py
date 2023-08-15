@@ -86,7 +86,7 @@ def getJobURL(chatId, jobType, addressType, addressData):
          addressType: addressData})
     url_extension = '/activatereminder?'
 
-    url = urllib.parse.quote_plus(app_url_link + url_extension + paramsSubstring)
+    url = app_url_link + url_extension + urllib.parse.quote_plus(paramsSubstring)
     return url
 
 
